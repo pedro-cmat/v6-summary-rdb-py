@@ -1,0 +1,1 @@
+{"valid_column_name": true, "number_of_rows": 3, "average_weight": 74.0, "average_age": 41.0, "stages": ["IV", "I", "II"]}

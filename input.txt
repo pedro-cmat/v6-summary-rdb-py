@@ -1,0 +1,1 @@
+{"method":"summarize", "column_names":["patient_id", "age", "weight", "stage"]}
