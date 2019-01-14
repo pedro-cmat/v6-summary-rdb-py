@@ -1,1 +1,1 @@
-{"valid_column_name": true, "number_of_rows": 3, "average_weight": 74.0, "average_age": 41.0, "stages": ["IV", "I", "II"]}
+{"column_names_correct": true, "number_of_rows": 3, "averages": {"patient_id": 2.0, "age": 41.0, "weight": 74.4}, "categories": {"stage": ["I", "II", "IV"], "cat": "single category"}}

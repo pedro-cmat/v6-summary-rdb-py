@@ -1,1 +1,1 @@
-{"method":"summarize", "column_names":["patient_id", "age", "weight", "stage"]}
+{"method":"summarize", "columns":{"patient_id": "int64","age": "int64","weight": "float64","stage": "category", "cat": "category"}}

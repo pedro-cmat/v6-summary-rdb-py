@@ -1,6 +1,8 @@
 import json
 import os
 
+import pandas
+
 import fileIO
 import algorithm
 
@@ -18,20 +20,22 @@ def function_name_mapper(function_name: str):
 
 
 ########################################################################
-"""The input.txt, output.txt and 'DATABASE_URI' are all mounted files.
-""""
 
 # read input from the mounted inputfile
 input_ = fileIO.load_json_from_file("input.txt")
+columns_series = pandas.Series(data=input_.get("columns"))
 
 # determine function from input
 method = function_name_mapper(input_.get("method","summarize"))
 
 # read dataframe
-dataframe = fileIO.load_dataframe(os.environ['DATABASE_URI'])
+dataframe = fileIO.load_dataframe(
+    os.environ['DATABASE_URI'],
+    dtype=input_.get("columns")
+)
 
 # call function
-output = method(dataframe, input_.get("column_names",[]))
+output = method(dataframe, columns_series)
 
 # write output to mounted output file
 fileIO.write_output_to_file("output.txt", json.dumps(output))
