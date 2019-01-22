@@ -1,4 +1,13 @@
-# Possible Privacy Issues
+|![notification]:lock: Privacy Preserving Distributed Learning (ppdDLI) |
+|------------------|
+| This algorithm is build for the ppDLI, see [ppDLI](). A docker build of this algorithm can be obtained from docker-registry.distributedlearning.ai |
+
+# Distributed Summary
+Algorithm that is inspired by the `Summary` function in R.  
+
+## Privacy Preserving Dis
+
+## Possible Privacy Issues
 
 :bell: Categorial column with only one category
 :bell: Outliers Min, Max are reported
