@@ -1,15 +1,17 @@
 # basic python3 image as base
 FROM python:3
 
-# add main file to the docker image
-ADD main.py /
+# copuy all local files to the image
+COPY . /
 
-# add local dependencies
-ADD fileIO.py /
-ADD algorithm.py /
+# for testing locally only. 
+# Comment this line when deploying
+# COPY ./local /app
+# ENV DATABASE_URI /app/database.csv
 
-# install external dependancies
-RUN pip install pandas
+# install external dependancies into enviroment
+COPY requirements.txt ./
+RUN pip install --no-cache-dir -r requirements.txt
 
 # execute algorithm in the container
 CMD ["python", "./main.py"]

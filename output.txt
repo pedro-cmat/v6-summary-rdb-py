@@ -1,1 +1,1 @@
-{"column_names_correct": true, "number_of_rows": 3, "averages": {"patient_id": 2.0, "age": 41.0, "weight": 74.4}, "categories": {"stage": ["I", "II", "IV"], "cat": "single category"}}
+{"column_names_correct": false, "number_of_rows": 6, "statistics": {"patient_id": {"min": 1, "q1": 2.25, "median": 3.5, "mean": 3.5, "q3": 4.75, "max": 6, "nan": 
