@@ -1,4 +1,4 @@
-|![notification]:lock: Privacy Preserving Distributed Learning (ppdDLI) |
+|:lock: Privacy Preserving Distributed Learning (ppdDLI) |
 |------------------|
 | This algorithm is build for the ppDLI, see [ppDLI](). A docker build of this algorithm can be obtained from docker-registry.distributedlearning.ai |
 
