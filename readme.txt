@@ -1,4 +1,5 @@
 # Possible Privacy Issues
+
 :bell: Categorial column with only one category
 :bell: Outliers Min, Max are reported
 
