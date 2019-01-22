@@ -3,9 +3,7 @@
 | This algorithm is part of the [ppDLI](https://github.com/IKNL/ppDLI). A docker build of this algorithm can be obtained from docker-registry.distributedlearning.ai/dsummary |
 
 # Distributed Summary
-Algorithm that is inspired by the `Summary` function in R.  
-
-## Privacy Preserving Dis
+Algorithm that is inspired by the `Summary` function in R. It report the `Min`, `Q1`, `Mean`, `Median`, `Q3`, `Max` and number of `Nan` values per column from each `Node`. 
 
 ## Possible Privacy Issues
 
@@ -15,12 +13,21 @@ Algorithm that is inspired by the `Summary` function in R.
 
 ## Privacy Protection
 
-✔️ If column names do not match nothing else is reported
-✔️ If dataset has less that 10 records, no statistical analysis is performed
+✔️ If column names do not match nothing else is reported <br />
+✔️ If dataset has less that 10 rows, no statistical analysis is performed <br />
 ✔️ Only statistical results are shared which include `Min`, `Q1`, `Mean`, `Median`, `Q3`, `Max` and number of `Nan` values per column.
 
 
+## Test / Develop
 
+You need to have Docker installed.
+
+To Build (assuming you are in the project-directory):
 ```
-docker run -e DATABASE_URI=/app/database.csv -v C:\Users\FMa1805.36838\Repositories\dSummary\local\input.txt:/app/input.txt -v C:\Users\FMa1805.36838\Repositories\dSummary\local\output.txt:/app/output.txt -v C:\Users\FMa1805.36838\Repositories\dSummary\local\database.csv:/app/database.csv dsummary
+docker build -t dsummary .
+```
+
+To test/run locally the folder `local` is included in the repository. The following command mounts these files and sets the docker `ENVIROMENT_VARIABLE` `DATABASE_URI`.
+```
+docker run -e DATABASE_URI=/app/database.csv -v .\local\input.txt:/app/input.txt -v .\local\output.txt:/app/output.txt -v .\local\database.csv:/app/database.csv dsummary
 ```
