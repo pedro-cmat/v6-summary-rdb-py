@@ -17,6 +17,10 @@ Algorithm that is inspired by the `Summary` function in R. It report the `Min`, 
 ✔️ If dataset has less that 10 rows, no statistical analysis is performed <br />
 ✔️ Only statistical results are shared which include `Min`, `Q1`, `Mean`, `Median`, `Q3`, `Max` and number of `Nan` values per column.
 
+## Input.txt
+```
+{"method":"summarize", decimal: ",", "sep":";", columns":{"patient_id": "Int64","age": "Int64","weight": "float64","stage": "category", "cat": "category", "hot_encoded":"Int64"}}
+```
 
 ## Test / Develop
 
