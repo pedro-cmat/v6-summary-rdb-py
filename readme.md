@@ -15,7 +15,7 @@ Algorithm that is inspired by the `Summary` function in R. It report the `Min`, 
 
 ✔️ If column names do not match nothing else is reported <br />
 ✔️ If dataset has less that 10 rows, no statistical analysis is performed <br />
-✔️ Only statistical results are shared which include `Min`, `Q1`, `Mean`, `Median`, `Q3`, `Max` and number of `Nan` values per column.
+✔️ Only statistical results `Min`, `Q1`, `Mean`, `Median`, `Q3`, `Max` and number of `Nan` values per column are reported.
 
 ## Input.txt
 ```
