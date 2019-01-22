@@ -19,7 +19,19 @@ Algorithm that is inspired by the `Summary` function in R. It report the `Min`, 
 
 ## Input.txt
 ```
-{"method":"summarize", decimal: ",", "sep":";", columns":{"patient_id": "Int64","age": "Int64","weight": "float64","stage": "category", "cat": "category", "hot_encoded":"Int64"}}
+{
+  "method":"summarize", 
+  decimal: ",", 
+  "sep":";", 
+  "columns":{
+    "patient_id": "Int64",
+    "age": "Int64",
+    "weight": "float64",
+    "stage": "category", 
+    "cat": "category", 
+    "hot_encoded":"Int64"
+   }
+}
 ```
 
 ## Test / Develop
