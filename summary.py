@@ -1,58 +1,65 @@
+import os
 import sys
+import pandas
 
-def summarize_dataframe(dataframe, columns_series):
+# loggers
+info = lambda msg: sys.stdout.write("info > "+msg+"\n")
+warn = lambda msg: sys.stdout.write("warn > "+msg+"\n")
 
-    # retrieve column names from the dataset
-    column_names = list(dataframe.keys())
+def summary(columns, decimal, seperator):
+
+    # create series from input column names
+    columns_series = pandas.Series(data=columns)
+
+    # create pandas dataframe from csv-file
+    info("Reading database-file")
+    dataframe = pandas.read_csv(
+        os.environ['DATABASE_URI'], 
+        sep=seperator,
+        decimal=decimal,
+        dtype=columns
+    )
 
     # compare column names from dataset to the input column names
-    column_names_correct = column_names == list(columns_series.keys())
+    info("Checking column-names")
+    column_names_correct = list(dataframe.keys()) == list(columns_series.keys())
     if not column_names_correct:
-        sys.stdout.write("Column names do not match. Algorithm terminated.")
-        return {
-            "column_names_correct": column_names_correct,
-        }
-    # print(f"column_names_correct={column_names_correct}")
+        warn("Column names do not match. Exiting.")
+        return {"column_names_correct": column_names_correct}
 
     # count the number of rows in the dataset
     # TODO should the minimal row-count be controlled by the Node?
+    info("Counting number of rows")
     number_of_rows = len(dataframe)
     if number_of_rows < 10:
-        sys.stdout.write("Dataset has less than 10 rows. Algorithm terminated")
+        warn("Dataset has less than 10 rows. Exiting.")
         return {
             "column_names_correct": column_names_correct,
             "number_of_rows": number_of_rows
         }
-    sys.stdout.write(f"number_of_rows={number_of_rows}")
 
-    ### statistic summary 
+    # min, max, median, average, Q1, Q3, missing_values
     columns = {}
-
-    # numeric columns report: min, max, median, average, Q1, Q3, missing_values
     numeric_colums = columns_series.loc[columns_series.isin(['Int64','float64'])]
     for column_name in numeric_colums.keys():
+        info(f"Numerical column={column_name} is processed")
         column_values = dataframe[column_name]
         q1, median, q3 = column_values.quantile([0.25,0.5,0.75]).values
-        mean = column_values.mean()
-        minimum = column_values.min()
-        maximum = column_values.max()
-        nan = column_values.isna().sum()
         columns[column_name] = {
-            "min": int(minimum),
+            "min": int(column_values.min()),
             "q1": int(q1),
             "median": int(median),
-            "mean": int(mean),
+            "mean": int(column_values.mean()),
             "q3": int(q3),
-            "max": int(maximum),
-            "nan": int(nan)
+            "max": int(column_values.max()),
+            "nan": int(column_values.isna().sum())
         }
-        sys.stdout.write(f"Column {column_name} processed")
-
+        
     # return the categories in categorial columns
     categoral_colums = columns_series.loc[columns_series.isin(['category'])]
     for column_name in categoral_colums.keys():
+        info(f"Categorial column={column_name} is processed")
         columns[column_name] = dataframe[column_name].value_counts().to_dict()
-        sys.stdout.write(f"Column {column_name} processed")
 
     return {
         "column_names_correct": column_names_correct,

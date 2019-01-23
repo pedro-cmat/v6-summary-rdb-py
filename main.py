@@ -1,41 +1,31 @@
 import json
 import os
+import sys
 
-import pandas
-
-import fileIO
-import algorithm
-
-def function_name_mapper(function_name: str):
-    """Maps the input method name (from the input file) to actual 
-    functions."""
-
-    function = {
-        "summary": algorithm.summarize_dataframe,
-        "summarize": algorithm.summarize_dataframe
-    }.get(function_name, None)
-
-    return function
-
-########################################################################
+from summary import summary, info, warn
 
 # read input from the mounted inputfile
-input_ = fileIO.load_json_from_file("app/input.txt")
-columns_series = pandas.Series(data=input_.get("columns"))
+info("Reading input")
+with open("app/input.txt") as fp:
+    input_ = json.loads(fp.read())
 
-# determine function from input, summarize is used by default
-method = function_name_mapper(input_.get("method","summarize"))
+# determine function from input, summarize is used by default.
+# and get the args and kwargs input for this function
+method_name = input_.get("method","summary")
+method = {
+    "summary": summary
+}.get(method_name)
+if not method:
+    warn(f"method name={method_name} not found!\n")
+    exit()
 
-# read dataframe
-dataframe = fileIO.load_dataframe(
-    os.environ['DATABASE_URI'],
-    dtype=input_.get("columns"),
-    decimal=input_.get("decimal", "."),
-    sep=input_.get("seperator", ",")
-)
+args = input_.get("args", [])
+kwargs = input_.get("kwargs", {})
 
 # call function
-output = method(dataframe, columns_series)
+output = method(*args, **kwargs)
 
 # write output to mounted output file
-fileIO.write_output_to_file("app/output.txt", json.dumps(output))
+info("Writing output")
+with open("app/output.txt", 'w') as fp:
+    fp.write(json.dumps(output))
