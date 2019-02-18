@@ -1,5 +1,5 @@
 {
-    "method":"summary", 
+    "method":"master", 
     "args": [], 
     "kwargs": {
         "decimal": ",", 
