@@ -4,6 +4,7 @@ import pandas
 import time
 
 from client.Python.FlaskIO import ClientContainerProtocol
+
 # loggers
 info = lambda msg: sys.stdout.write("info > "+msg+"\n")
 warn = lambda msg: sys.stdout.write("warn > "+msg+"\n")
@@ -24,15 +25,16 @@ def master(token, columns, decimal, seperator):
     """
 
     # post task to all nodes in collaboration
-    # client = ClientContainerProtocol(token=token, host="http://host.docker.internal",
-        # port=5000, path="/api")
+    info("Setup server communication client")
     client = ClientContainerProtocol(
         token=token, 
         host=os.environ["HOST"],
-        port=5000, 
-        path="/api")
+        port=os.environ["PORT"], 
+        path=os.environ["API_PATH"]
+    )
         
     # define the input for the summary algorithm
+    info("Defining input paramaeters")
     input_ = {
         "method": "summary",
         "args": [],
@@ -65,12 +67,15 @@ def master(token, columns, decimal, seperator):
     g_stats = {}
 
     # check that all dataset reported their headers are correct
+    info("Check if all column names on all sites are correct")
     g_stats["column_names_correct"] = all(x["column_names_correct"] for x in results)
 
     # count the total number of rows of all datasets
+    info("Count the total number of all rows from all datasets")
     g_stats["number_of_rows"] = sum(x["number_of_rows"] for x in results)
 
     # compute global statics for numeric columns
+    info("Computing numerical column statistics")
     columns_series = pandas.Series(columns)
     numeric_colums = columns_series.loc[columns_series.isin(['Int64','float64'])]
     for header in numeric_colums.keys():
