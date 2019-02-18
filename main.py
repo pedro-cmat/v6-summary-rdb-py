@@ -1,3 +1,19 @@
+""" Main.py
+
+This is the main entry-point when the docker-container is initialized.
+It executes the following steps:
+
+1) read the input.txt
+    This should contain the name of the method that should be executed.
+    Optionally it contains some args and kwargs
+2) In case it is a master algorithm the token is read from token.txt
+    This is a JWT token that can be used to interact with the server
+3) The method is executed
+4) The output it written to output.txt
+
+If the docker container is terminated. Output.txt will be send to the 
+server by the node.
+"""
 import json
 import os
 import sys

@@ -9,7 +9,19 @@ info = lambda msg: sys.stdout.write("info > "+msg+"\n")
 warn = lambda msg: sys.stdout.write("warn > "+msg+"\n")
 
 def master(token, columns, decimal, seperator):
-    """master"""
+    """Master algoritm.
+    
+    Algorithm which request the dsummary from all sites and then
+    computes the overal (whereas possible) of the entire (distributed)
+    dataset. This is simalar what the researcher would do without a
+    master container.
+
+    Keyword arguments:
+    token -- JWT token to access the central server
+    columns -- column names/type pairs
+    decimal -- how decimals are seperated in csv-file, usually "." or ","
+    seperator -- line seperator in csv-file, usually ";" or ":"
+    """
 
     # post task to all nodes in collaboration
     # client = ClientContainerProtocol(token=token, host="http://host.docker.internal",
@@ -20,7 +32,7 @@ def master(token, columns, decimal, seperator):
         port=5000, 
         path="/api")
         
-    # define the input
+    # define the input for the summary algorithm
     input_ = {
         "method": "summary",
         "args": [],
@@ -98,7 +110,15 @@ def master(token, columns, decimal, seperator):
     return g_stats
 
 def summary(columns, decimal, seperator):
-    """node"""
+    """Node algorithm to compute site-statistics.
+    
+    Algorithm which computes a summary (min,max,avg, etc) from all sites
+
+    Keyword arguments:
+    columns -- column names/type pairs
+    decimal -- how decimals are seperated in csv-file, usually "." or ","
+    seperator -- line seperator in csv-file, usually ";" or ":"
+    """
 
     # create series from input column names
     columns_series = pandas.Series(data=columns)
