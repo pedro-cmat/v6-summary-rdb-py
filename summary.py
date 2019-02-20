@@ -2,8 +2,9 @@ import os
 import sys
 import pandas
 import time
+import json
 
-from client.Python.FlaskIO import ClientContainerProtocol
+from pytaskmanager.node.FlaskIO import ClientContainerProtocol
 
 # loggers
 info = lambda msg: sys.stdout.write("info > "+msg+"\n")
@@ -32,7 +33,7 @@ def master(token, columns, decimal, seperator):
         port=os.environ["PORT"], 
         path=os.environ["API_PATH"]
     )
-        
+       
     # define the input for the summary algorithm
     info("Defining input paramaeters")
     input_ = {
@@ -61,6 +62,10 @@ def master(token, columns, decimal, seperator):
 
     info("Obtaining results")
     results = client.get_results(task_id=task.get("id"))
+    results = [json.loads(result.get("result")) for result in results]
+
+    # for x in results:
+    #     info(str(x))
 
     # process the output 
     info("Process node info to global stats")
@@ -68,12 +73,14 @@ def master(token, columns, decimal, seperator):
 
     # check that all dataset reported their headers are correct
     info("Check if all column names on all sites are correct")
-    g_stats["column_names_correct"] = all(x["column_names_correct"] for x in results)
+    g_stats["column_names_correct"] = all([x["column_names_correct"] for x in results])
+    # info(f"correct={g_stats['column_names_correct']}")
 
     # count the total number of rows of all datasets
     info("Count the total number of all rows from all datasets")
-    g_stats["number_of_rows"] = sum(x["number_of_rows"] for x in results)
-
+    g_stats["number_of_rows"] = sum([x["number_of_rows"] for x in results])
+    # info(f"n={g_stats['number_of_rows']}")
+    
     # compute global statics for numeric columns
     info("Computing numerical column statistics")
     columns_series = pandas.Series(columns)
@@ -87,9 +94,13 @@ def master(token, columns, decimal, seperator):
         
         # compute globals
         g_min = min([x.get("min") for x in stats])
+        # info(f"g_min={g_min}")
         g_max = max([x.get("max") for x in stats])
+        # info(f"g_max={g_max}")
         g_nan = sum([x.get("nan") for x in stats])
+        # info(f"g_nan={g_nan}")
         g_mean = sum([x.get("sum") for x in stats]) / (n-g_nan)
+        # info(f"g_mean={g_mean}")
         g_std = (sum([x.get("sq_dev_sum") for x in stats]) / (n-1-g_nan))**(0.5)
         
         # estimate the median
@@ -162,14 +173,24 @@ def summary(columns, decimal, seperator):
         info(f"Numerical column={column_name} is processed")
         column_values = dataframe[column_name]
         q1, median, q3 = column_values.quantile([0.25,0.5,0.75]).values
+        mean = column_values.mean()
+        minimum = column_values.min()
+        maximum = column_values.max()
+        nan = column_values.isna().sum()
+        total = column_values.sum()
+        std = column_values.std()
+        sq_dev_sum = (column_values-mean).pow(2).sum()
         columns[column_name] = {
-            "min": int(column_values.min()),
-            "q1": int(q1),
-            "median": int(median),
-            "mean": int(column_values.mean()),
-            "q3": int(q3),
-            "max": int(column_values.max()),
-            "nan": int(column_values.isna().sum())
+            "min": minimum,
+            "q1": q1,
+            "median": median,
+            "mean": mean,
+            "q3": q3,
+            "max": maximum,
+            "nan": int(nan),
+            "sum": total,
+            "sq_dev_sum": sq_dev_sum,
+            "std": std
         }
         
     # return the categories in categorial columns
