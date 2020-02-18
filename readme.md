@@ -1,8 +1,11 @@
-|:warning: Privacy Preserving Distributed Learning (ppdDLI) |
-|------------------|
-| This algorithm is part of the [ppDLI](https://github.com/IKNL/ppDLI). A docker build of this algorithm can be obtained from docker-registry.distributedlearning.ai/dsummary |
+<img src="https://github.com/IKNL/guidelines/blob/master/resources/logos/vantage6.png?raw=true" width=200 align="right">
 
 # Distributed Summary
+
+|:warning: priVAcy preserviNg federaTed leArninG infrastructurE for Secure Insight eXchange (VANTAGE6) |
+|------------------|
+| This algorithm is part of [VANTAGE6](https://github.com/IKNL/VANTAGE6). A docker build of this algorithm can be obtained from docker-registry.distributedlearning.ai/dsummary |
+
 Algorithm that is inspired by the `Summary` function in R. It report the `Min`, `Q1`, `Mean`, `Median`, `Q3`, `Max` and number of `Nan` values per column from each `Node`. 
 
 ## Possible Privacy Issues
