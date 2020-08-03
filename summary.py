@@ -4,15 +4,16 @@ import pandas
 import time
 import json
 
-from pytaskmanager.node.FlaskIO import ClientContainerProtocol
+from vantage6.tools.container_client import ContainerClient
 
 # loggers
 info = lambda msg: sys.stdout.write("info > "+msg+"\n")
 warn = lambda msg: sys.stdout.write("warn > "+msg+"\n")
 
+
 def master(token, columns, decimal, seperator):
     """Master algoritm.
-    
+
     Algorithm which request the dsummary from all sites and then
     computes the overal (whereas possible) of the entire (distributed)
     dataset. This is simalar what the researcher would do without a
@@ -27,21 +28,21 @@ def master(token, columns, decimal, seperator):
 
     # post task to all nodes in collaboration
     info("Setup server communication client")
-    client = ClientContainerProtocol(
-        token=token, 
+    client = ContainerClient(
+        token=token,
         host=os.environ["HOST"],
-        port=os.environ["PORT"], 
+        port=os.environ["PORT"],
         path=os.environ["API_PATH"]
     )
-       
+
     # define the input for the summary algorithm
     info("Defining input paramaeters")
     input_ = {
         "method": "summary",
         "args": [],
         "kwargs": {
-            "decimal": decimal, 
-            "seperator":seperator, 
+            "decimal": decimal,
+            "seperator":seperator,
             "columns":columns
         }
     }
@@ -67,7 +68,7 @@ def master(token, columns, decimal, seperator):
     # for x in results:
     #     info(str(x))
 
-    # process the output 
+    # process the output
     info("Process node info to global stats")
     g_stats = {}
 
@@ -80,7 +81,7 @@ def master(token, columns, decimal, seperator):
     info("Count the total number of all rows from all datasets")
     g_stats["number_of_rows"] = sum([x["number_of_rows"] for x in results])
     # info(f"n={g_stats['number_of_rows']}")
-    
+
     # compute global statics for numeric columns
     info("Computing numerical column statistics")
     columns_series = pandas.Series(columns)
@@ -88,10 +89,10 @@ def master(token, columns, decimal, seperator):
     for header in numeric_colums.keys():
 
         n = g_stats["number_of_rows"]
-        
+
         # extract the statistics for each column and all results
-        stats = [ result["statistics"][header] for result in results ] 
-        
+        stats = [ result["statistics"][header] for result in results ]
+
         # compute globals
         g_min = min([x.get("min") for x in stats])
         # info(f"g_min={g_min}")
@@ -102,15 +103,15 @@ def master(token, columns, decimal, seperator):
         g_mean = sum([x.get("sum") for x in stats]) / (n-g_nan)
         # info(f"g_mean={g_mean}")
         g_std = (sum([x.get("sq_dev_sum") for x in stats]) / (n-1-g_nan))**(0.5)
-        
+
         # estimate the median
         # see https://stats.stackexchange.com/questions/103919/estimate-median-from-mean-std-dev-and-or-range
-        u_std = (((n-1)/n)**(0.5)) * g_std 
+        u_std = (((n-1)/n)**(0.5)) * g_std
         g_median = [
             max([g_min, g_mean - u_std]),
             min([g_max, g_mean + u_std])
         ]
-        
+
         g_stats[header] = {
             "min": g_min,
             "max": g_max,
@@ -125,9 +126,10 @@ def master(token, columns, decimal, seperator):
 
     return g_stats
 
+
 def summary(columns, decimal, seperator):
     """Node algorithm to compute site-statistics.
-    
+
     Algorithm which computes a summary (min,max,avg, etc) from all sites
 
     Keyword arguments:
@@ -142,7 +144,7 @@ def summary(columns, decimal, seperator):
     # create pandas dataframe from csv-file
     info("Reading database-file")
     dataframe = pandas.read_csv(
-        os.environ['DATABASE_URI'], 
+        os.environ['DATABASE_URI'],
         sep=seperator,
         decimal=decimal,
         dtype=columns
@@ -192,7 +194,7 @@ def summary(columns, decimal, seperator):
             "sq_dev_sum": sq_dev_sum,
             "std": std
         }
-        
+
     # return the categories in categorial columns
     categoral_colums = columns_series.loc[columns_series.isin(['category'])]
     for column_name in categoral_colums.keys():

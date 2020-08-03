@@ -1,12 +1,17 @@
-<img src="https://github.com/IKNL/guidelines/blob/master/resources/logos/vantage6.png?raw=true" width=200 align="right">
+<h1 align="center">
+  <br>
+  <a href="https://vantage6.ai"><img src="https://github.com/IKNL/guidelines/blob/master/resources/logos/vantage6.png?raw=true" alt="vantage6" width="400"></a>
+</h1>
 
-# Distributed Summary
+<h3 align=center> A privacy preserving federated learning solution</h3>
+
+# Federated Summary
 
 |:warning: priVAcy preserviNg federaTed leArninG infrastructurE for Secure Insight eXchange (VANTAGE6) |
 |------------------|
-| This algorithm is part of [VANTAGE6](https://github.com/IKNL/VANTAGE6). A docker build of this algorithm can be obtained from docker-registry.distributedlearning.ai/dsummary |
+| This algorithm is part of [VANTAGE6](https://github.com/IKNL/vantage6). A docker build of this algorithm can be obtained from harbor.vantage6.ai/algorithms/dsummary |
 
-Algorithm that is inspired by the `Summary` function in R. It report the `Min`, `Q1`, `Mean`, `Median`, `Q3`, `Max` and number of `Nan` values per column from each `Node`. 
+Algorithm that is inspired by the `Summary` function in R. It report the `Min`, `Q1`, `Mean`, `Median`, `Q3`, `Max` and number of `Nan` values per column from each `Node`.
 
 ## Possible Privacy Issues
 
@@ -23,15 +28,15 @@ Algorithm that is inspired by the `Summary` function in R. It report the `Min`, 
 ## Input.txt
 ```
 {
-  "method":"summarize", 
-  decimal: ",", 
-  "sep":";", 
+  "method":"summarize",
+  decimal: ",",
+  "sep":";",
   "columns":{
     "patient_id": "Int64",
     "age": "Int64",
     "weight": "float64",
-    "stage": "category", 
-    "cat": "category", 
+    "stage": "category",
+    "cat": "category",
     "hot_encoded":"Int64"
    }
 }
