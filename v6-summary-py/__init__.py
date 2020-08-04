@@ -1,17 +1,15 @@
-import os
 import sys
 import pandas
 import time
 import json
 
-from vantage6.tools.container_client import ContainerClient
 
 # loggers
 info = lambda msg: sys.stdout.write("info > "+msg+"\n")
 warn = lambda msg: sys.stdout.write("warn > "+msg+"\n")
 
 
-def master(token, columns, decimal, seperator):
+def master(client, data, columns, decimal, seperator):
     """Master algoritm.
 
     Algorithm which request the dsummary from all sites and then
@@ -27,13 +25,13 @@ def master(token, columns, decimal, seperator):
     """
 
     # post task to all nodes in collaboration
-    info("Setup server communication client")
-    client = ContainerClient(
-        token=token,
-        host=os.environ["HOST"],
-        port=os.environ["PORT"],
-        path=os.environ["API_PATH"]
-    )
+    # info("Setup server communication client")
+    # client = ContainerClient(
+    #     token=token,
+    #     host=os.environ["HOST"],
+    #     port=os.environ["PORT"],
+    #     path=os.environ["API_PATH"]
+    # )
 
     # define the input for the summary algorithm
     info("Defining input paramaeters")
@@ -47,10 +45,16 @@ def master(token, columns, decimal, seperator):
         }
     }
 
+    organizations = client.get_organizations_in_my_collaboration()
+    ids = [organization.get("id") for organization in organizations]
+
     # collaboration and image is stored in the key, so we do not need
     # to specify these
     info("Creating node tasks")
-    task = client.create_new_task(input_)
+    task = client.create_new_task(
+        input_,
+        organization_ids=ids
+    )
 
     # wait for all results
     # TODO subscribe to websocket, to avoid polling
@@ -63,10 +67,15 @@ def master(token, columns, decimal, seperator):
 
     info("Obtaining results")
     results = client.get_results(task_id=task.get("id"))
-    results = [json.loads(result.get("result")) for result in results]
+    # results = [json.loads(result.get("result")) for result in results]
 
     # for x in results:
     #     info(str(x))
+
+    info("Check that column names are correct")
+    if not all(x['column_names_correct'] for x in results):
+        warn("Column names are not corect on all sites?!")
+        return None
 
     # process the output
     info("Process node info to global stats")
@@ -126,8 +135,7 @@ def master(token, columns, decimal, seperator):
 
     return g_stats
 
-
-def summary(columns, decimal, seperator):
+def RPC_summary(dataframe, columns, decimal, seperator):
     """Node algorithm to compute site-statistics.
 
     Algorithm which computes a summary (min,max,avg, etc) from all sites
@@ -142,16 +150,18 @@ def summary(columns, decimal, seperator):
     columns_series = pandas.Series(data=columns)
 
     # create pandas dataframe from csv-file
-    info("Reading database-file")
-    dataframe = pandas.read_csv(
-        os.environ['DATABASE_URI'],
-        sep=seperator,
-        decimal=decimal,
-        dtype=columns
-    )
+    # info("Reading database-file")
+    # dataframe = pandas.read_csv(
+    #     os.environ['DATABASE_URI'],
+    #     sep=seperator,
+    #     decimal=decimal,
+    #     dtype=columns
+    # )
 
     # compare column names from dataset to the input column names
     info("Checking column-names")
+    info(str(list(dataframe.keys())))
+    info(str(list(columns_series.keys())))
     column_names_correct = list(dataframe.keys()) == list(columns_series.keys())
     if not column_names_correct:
         warn("Column names do not match. Exiting.")
