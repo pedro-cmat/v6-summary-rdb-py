@@ -3,48 +3,39 @@ import pandas
 import time
 import json
 
-
-# loggers
-info = lambda msg: sys.stdout.write("info > "+msg+"\n")
-warn = lambda msg: sys.stdout.write("warn > "+msg+"\n")
+from vantage6.tools.util import warn, info
 
 
-def master(client, data, columns, decimal, seperator):
-    """Master algoritm.
-
-    Algorithm which request the dsummary from all sites and then
-    computes the overal (whereas possible) of the entire (distributed)
-    dataset. This is simalar what the researcher would do without a
-    master container.
-
-    Keyword arguments:
-    token -- JWT token to access the central server
-    columns -- column names/type pairs
-    decimal -- how decimals are seperated in csv-file, usually "." or ","
-    seperator -- line seperator in csv-file, usually ";" or ":"
+def master(client, data, columns):
     """
+    Master algorithm to compute a summary of the federated datasets.
 
-    # post task to all nodes in collaboration
-    # info("Setup server communication client")
-    # client = ContainerClient(
-    #     token=token,
-    #     host=os.environ["HOST"],
-    #     port=os.environ["PORT"],
-    #     path=os.environ["API_PATH"]
-    # )
+    Parameters
+    ----------
+    client : ContainerClient
+        Interface to the central server. This is supplied by the wrapper.
+    data : dataframe
+        Pandas dataframe. This is supplied by the wrapper / node.
+    columns : Dictonairy
+        Dict containing column names and types
 
+    Returns
+    -------
+    Dict
+        A dictonairy containing summary statistics for all the columns of the
+        dataset.
+    """
     # define the input for the summary algorithm
     info("Defining input paramaeters")
     input_ = {
         "method": "summary",
         "args": [],
         "kwargs": {
-            "decimal": decimal,
-            "seperator":seperator,
-            "columns":columns
+            "columns": columns
         }
     }
 
+    # obtain organizations that are within my collaboration
     organizations = client.get_organizations_in_my_collaboration()
     ids = [organization.get("id") for organization in organizations]
 
@@ -67,10 +58,6 @@ def master(client, data, columns, decimal, seperator):
 
     info("Obtaining results")
     results = client.get_results(task_id=task.get("id"))
-    # results = [json.loads(result.get("result")) for result in results]
-
-    # for x in results:
-    #     info(str(x))
 
     info("Check that column names are correct")
     if not all(x['column_names_correct'] for x in results):
@@ -135,40 +122,34 @@ def master(client, data, columns, decimal, seperator):
 
     return g_stats
 
-def RPC_summary(dataframe, columns, decimal, seperator):
-    """Node algorithm to compute site-statistics.
+def RPC_summary(dataframe, columns):
+    """
+    Computes a summary of all columns of the dataframe
 
-    Algorithm which computes a summary (min,max,avg, etc) from all sites
+    Parameters
+    ----------
+    dataframe : pandas dataframe
+        Pandas dataframe that contains the local data.
+    columns : Dictonairy
+        Dict containing column name and column (panda) type pairs
 
-    Keyword arguments:
-    columns -- column names/type pairs
-    decimal -- how decimals are seperated in csv-file, usually "." or ","
-    seperator -- line seperator in csv-file, usually ";" or ":"
+    Returns
+    -------
+    Dict
+        A Dict containing some simple statistics for the local dataset.
     """
 
     # create series from input column names
     columns_series = pandas.Series(data=columns)
 
-    # create pandas dataframe from csv-file
-    # info("Reading database-file")
-    # dataframe = pandas.read_csv(
-    #     os.environ['DATABASE_URI'],
-    #     sep=seperator,
-    #     decimal=decimal,
-    #     dtype=columns
-    # )
-
     # compare column names from dataset to the input column names
     info("Checking column-names")
-    info(str(list(dataframe.keys())))
-    info(str(list(columns_series.keys())))
     column_names_correct = list(dataframe.keys()) == list(columns_series.keys())
     if not column_names_correct:
         warn("Column names do not match. Exiting.")
         return {"column_names_correct": column_names_correct}
 
     # count the number of rows in the dataset
-    # TODO should the minimal row-count be controlled by the Node?
     info("Counting number of rows")
     number_of_rows = len(dataframe)
     if number_of_rows < 10:

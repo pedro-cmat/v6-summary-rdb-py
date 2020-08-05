@@ -25,21 +25,40 @@ Algorithm that is inspired by the `Summary` function in R. It report the `Min`, 
 ✔️ If dataset has less that 10 rows, no statistical analysis is performed <br />
 ✔️ Only statistical results `Min`, `Q1`, `Mean`, `Median`, `Q3`, `Max` and number of `Nan` values per column are reported.
 
-## Input.txt
-```
-{
-  "method":"summarize",
-  decimal: ",",
-  "sep":";",
-  "columns":{
-    "patient_id": "Int64",
-    "age": "Int64",
-    "weight": "float64",
-    "stage": "category",
-    "cat": "category",
-    "hot_encoded":"Int64"
-   }
+## Usage
+```python
+from vantage6.client import Client
+from pathlib import Path
+
+# Create, athenticate and setup client
+client = Client("http://127.0.0.1", 5000, "")
+client.authenticate("frank@iknl.nl", "password")
+client.setup_encryption(None)
+
+# Define algorithm input
+input_ = {
+    "master": "true",
+    "method":"master",
+    "args": [
+      {
+        "num_awards":"Int64",
+        "prog":"category", "math":"Int64"
+      }
+    ],
+    "kwargs": {}
 }
+
+# Send the task to the central server
+task = client.post_task(
+    name="testing",
+    image="harbor.vantage6.ai/algorithms/summary",
+    collaboration_id=1,
+    input_= input_,
+    organization_ids=[2]
+)
+
+# Retrieve the results
+res = client.get_results(task_id=task.get("id")
 ```
 
 ## Test / Develop
@@ -48,10 +67,10 @@ You need to have Docker installed.
 
 To Build (assuming you are in the project-directory):
 ```
-docker build -t dsummary .
+docker build -t harbor.vantage6.ai/algorithms/summary .
 ```
 
 To test/run locally the folder `local` is included in the repository. The following command mounts these files and sets the docker `ENVIROMENT_VARIABLE` `DATABASE_URI`.
 ```
-docker run -e DATABASE_URI=/app/database.csv -v .\local\input.txt:/app/input.txt -v .\local\output.txt:/app/output.txt -v .\local\database.csv:/app/database.csv dsummary
+docker run -e DATABASE_URI=/app/database.csv -v .\local\input.txt:/app/input.txt -v .\local\output.txt:/app/output.txt -v .\local\database.csv:/app/database.csv harbor.vantage6.ai/algorithms/summary
 ```
