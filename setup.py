@@ -15,16 +15,16 @@ with open(path.join(here, 'README.md'), encoding='utf-8') as f:
 
 # setup the package
 setup(
-    name='v6-summary-py',
+    name='v6-summary-rdb',
     version="1.0.0",
-    description='vantage6 summary',
+    description='vantage6 summary for relational databases',
     long_description=long_description,
     long_description_content_type='text/markdown',
-    url='https://github.com/IKNL/v6-summary-py',
+    url='https://github.com/pedro-cmat/v6-summary-rdb',
     packages=find_packages(),
     python_requires='>=3.6',
     install_requires=[
-        # 'vantage6-client'
+        'psycopg2'
     ]
     # ,
     # extras_require={
