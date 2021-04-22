@@ -29,26 +29,29 @@ client.authenticate("root", "admin")
 
 # 2. Prepare input for the dsummary Docker image (algorithm)
 input_ = {
-    "method": "master",
-    "args": [],
+    "master": "true",
+    "method":"master", 
+    "args": [], 
     "kwargs": {
-        "decimal": ",",
-        "seperator": ";",
-        "columns": {
-            "patient_id": "Int64",
-            "age": "Int64",
-            "weight": "float64",
-            "stage": "category",
-            "cat": "category",
-            "hot_encoded": "Int64"
-        }
+        #"functions": ["min", "max"],
+        "columns": [
+            {
+                "variable": "age",
+                "table": "records",
+                "functions": ["min", "max"]
+            },
+            {
+                "variable": "weight",
+                "table": "records"
+            }
+        ]
     }
 }
 
 # 3. post the task to the server
 task = client.post_task(
     name="summary",
-    image="docker-registry.distributedlearning.ai/dsummary",
+    image="pcmateus/v6-summary-rdb",
     collaboration_id=3,
     organization_ids=[3],  # specify where the central container should run!
     input_=input_

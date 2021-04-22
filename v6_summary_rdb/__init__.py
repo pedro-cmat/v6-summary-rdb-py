@@ -31,7 +31,7 @@ def master(client, db_client, columns, functions):
     Returns
     -------
     Dict
-        A dictionary containing summary statistics for all the columns of the
+        A dictionary containing summary statistics for the chosen columns of the
         dataset.
     """
     # Validating the input

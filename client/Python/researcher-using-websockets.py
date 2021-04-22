@@ -54,26 +54,29 @@ taskNamespace.emit("join_room", f"collaboration_{collaboration_id}")
 
 # input for the dsummary Docker image (algorithm)
 input_ = {
-    "method": "summary",
-    "args": [],
+    "master": "true",
+    "method":"master", 
+    "args": [], 
     "kwargs": {
-        "decimal": ",",
-        "seperator": ";",
-        "columns": {
-            "patient_id": "Int64",
-            "age": "Int64",
-            "weight": "float64",
-            "stage": "category",
-            "cat": "category",
-            "hot_encoded": "Int64"
-        }
+        #"functions": ["min", "max"],
+        "columns": [
+            {
+                "variable": "age",
+                "table": "records",
+                "functions": ["min", "max"]
+            },
+            {
+                "variable": "weight",
+                "table": "records"
+            }
+        ]
     }
 }
 
 # post the task to the server
 task = client.post_task(
     name="summary",
-    image="harbor.vantage6.ai/algorithms/summary",
+    image="pcmateus/v6-summary-rdb",
     collaboration_id=collaboration_id,
     input_=input_
 )

@@ -1,29 +1,18 @@
-<h1 align="center">
-  <br>
-  <a href="https://vantage6.ai"><img src="https://github.com/IKNL/guidelines/blob/master/resources/logos/vantage6.png?raw=true" alt="vantage6" width="400"></a>
-</h1>
+# Federated RDB Summary
 
-<h3 align=center> A privacy preserving federated learning solution</h3>
-
-# Federated Summary
-
-|:warning: priVAcy preserviNg federaTed leArninG infrastructurE for Secure Insight eXchange (VANTAGE6) |
-|------------------|
-| This algorithm is part of [VANTAGE6](https://github.com/IKNL/vantage6). A docker build of this algorithm can be obtained from harbor.vantage6.ai/algorithms/dsummary |
-
-Algorithm that is inspired by the `Summary` function in R. It report the `Min`, `Q1`, `Mean`, `Median`, `Q3`, `Max` and number of `Nan` values per column from each `Node`.
+Algorithm based on the Vantage 6 Federated Summary for relational databases. It reports the `Min`, `Mean`, `Max` from each `Node`.
 
 ## Possible Privacy Issues
 
 🚨 Categorial column with only one category <br />
 🚨 `Min` an `Max` for each column is reported <br />
-🚨 Column names can be geussed, by trail and error
+🚨 Column names can be guessed, by trail and error
 
 ## Privacy Protection
 
 ✔️ If column names do not match nothing else is reported <br />
 ✔️ If dataset has less that 10 rows, no statistical analysis is performed <br />
-✔️ Only statistical results `Min`, `Q1`, `Mean`, `Median`, `Q3`, `Max` and number of `Nan` values per column are reported.
+✔️ Only statistical results `Min`, `Mean`, `Max` are reported.
 
 ## Usage
 ```python
@@ -32,26 +21,38 @@ from pathlib import Path
 
 # Create, athenticate and setup client
 client = Client("http://127.0.0.1", 5000, "")
-client.authenticate("frank@iknl.nl", "password")
+client.authenticate("researcher@center.nl", "password")
 client.setup_encryption(None)
 
 # Define algorithm input
+# The summary functions to be computed for each column will be selected in the following order:
+# 1. the functions provided for a specific column
+# 2. the functions provided for all columns
+# 3. all functions will be computed
 input_ = {
     "master": "true",
-    "method":"master",
-    "args": [
-      {
-        "num_awards":"Int64",
-        "prog":"category", "math":"Int64"
-      }
-    ],
-    "kwargs": {}
+    "method":"master", 
+    "args": [], 
+    "kwargs": {
+        #"functions": ["min", "max"],
+        "columns": [
+            {
+                "variable": "age",
+                "table": "records",
+                #"functions": ["min", "max"]
+            },
+            {
+                "variable": "Clinical.T.Stage",
+                "table": "records"
+            }
+        ]
+    }
 }
 
 # Send the task to the central server
 task = client.post_task(
-    name="testing",
-    image="harbor.vantage6.ai/algorithms/summary",
+    name="summary",
+    image="pcmateus/v6-summary-rdb",
     collaboration_id=1,
     input_= input_,
     organization_ids=[2]
@@ -67,7 +68,7 @@ You need to have Docker installed.
 
 To Build (assuming you are in the project-directory):
 ```
-docker build -t harbor.vantage6.ai/algorithms/summary .
+docker build -t v6-summary-rdb .
 ```
 
 To test/run locally the folder `local` is included in the repository. The following command mounts these files and sets the docker `ENVIROMENT_VARIABLE` `DATABASE_URI`.
