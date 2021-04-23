@@ -14,10 +14,24 @@ Algorithm based on the Vantage 6 Federated Summary for relational databases. It 
 ✔️ If dataset has less that 10 rows, no statistical analysis is performed <br />
 ✔️ Only statistical results `Min`, `Mean`, `Max` are reported.
 
+## Node Setup
+
+Make sure to set the database connection parameters as environment variables using the default variables for a postgres database (https://www.postgresql.org/docs/9.3/libpq-envars.html):
+
+```yaml
+    application:
+        ...
+        algorithm_env:
+            PGUSER: <user>
+            PGPASSWORD: <password>
+            PGDATABASE: <database>
+            PGPORT: <port>
+            PGHOST: <host>
+```
+
 ## Usage
 ```python
 from vantage6.client import Client
-from pathlib import Path
 
 # Create, athenticate and setup client
 client = Client("http://127.0.0.1", 5000, "")
@@ -34,12 +48,12 @@ input_ = {
     "method":"master", 
     "args": [], 
     "kwargs": {
-        #"functions": ["min", "max"],
+        "functions": [],
         "columns": [
             {
                 "variable": "age",
                 "table": "records",
-                #"functions": ["min", "max"]
+                "functions": ["min", "max"]
             },
             {
                 "variable": "Clinical.T.Stage",
@@ -52,7 +66,7 @@ input_ = {
 # Send the task to the central server
 task = client.post_task(
     name="summary",
-    image="pcmateus/v6-summary-rdb",
+    image="pmateus/v6-summary-rdb:1.0.0",
     collaboration_id=1,
     input_= input_,
     organization_ids=[2]
@@ -69,9 +83,4 @@ You need to have Docker installed.
 To Build (assuming you are in the project-directory):
 ```
 docker build -t v6-summary-rdb .
-```
-
-To test/run locally the folder `local` is included in the repository. The following command mounts these files and sets the docker `ENVIROMENT_VARIABLE` `DATABASE_URI`.
-```
-docker run -e DATABASE_URI=/app/database.csv -v .\local\input.txt:/app/input.txt -v .\local\output.txt:/app/output.txt -v .\local\database.csv:/app/database.csv harbor.vantage6.ai/algorithms/summary
 ```

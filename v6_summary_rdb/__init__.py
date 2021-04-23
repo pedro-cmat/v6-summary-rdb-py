@@ -9,7 +9,6 @@ from v6_summary_rdb.aggregators import *
 from v6_summary_rdb.constants import *
 
 AGGREGATORS = {
-    COUNT_FUNCTION: count,
     MAX_FUNCTION: maximum,
     MIN_FUNCTION: minimum,
     AVG_FUNCTION: average
@@ -131,11 +130,12 @@ def RPC_summary(db_client, columns):
     summary = {}
     for column in columns:
         # construct the sql statement
-        sql_functions = f"COUNT({column[VARIABLE]})"
+        variable = f'"{column[VARIABLE]}"'
+        sql_functions = ''
         for function in column[REQUIRED_FUNCTIONS]:
             if function.upper() not in sql_functions:
-                sql_functions += f", {function.upper()}({column[VARIABLE]})"
-        sql_statement = f"SELECT {sql_functions} FROM {column[TABLE].upper()} WHERE {column[VARIABLE]} IS NOT NULL"
+                sql_functions += f"{' ,' if sql_functions else ''}{function.upper()}({variable})"
+        sql_statement = f"SELECT {sql_functions} FROM {column[TABLE].upper()} WHERE {variable} IS NOT NULL"
 
         # execute the sql query and retrieve the results
         try:

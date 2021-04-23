@@ -52,7 +52,7 @@ input_ = {
 # post the task to the server
 task = client.post_task(
     name="summary",
-    image="pcmateus/v6-summary-rdb",
+    image="pmateus/v6-summary-rdb:1.0.0",
     collaboration_id=3,
     input_=input_
 )

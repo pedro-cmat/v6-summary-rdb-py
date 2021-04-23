@@ -77,24 +77,14 @@ def docker_wrapper(module: str):
         token = fp.read().strip()
 
     # Get the database client
-    db_params = [DATABASE_URI, DATABASE_PASSWORD, DATABASE_PORT, DATABASE_USER]
-    if all([os.getenv(var) for var in db_params]):
-        info(f"Connecting to {os.environ[DATABASE_URI]}")
-        try:
-            connection = psycopg2.connect(
-                user=os.getenv(DATABASE_USER),
-                password=os.getenv(DATABASE_PASSWORD),
-                host=os.getenv(DATABASE_URI),
-                port=os.getenv(DATABASE_PORT),
-                dbname=os.getenv(DATABASE_NAME)
-            )
-            db_client = connection.cursor()
-            info("Successfully connected to the database")       
-        except Exception as error:
-            info(str(error))
-            raise Exception("Failed to get a DB connection")
-    else:
-        raise Exception("Please set the database environment variables in the node")
+    info(f"Connecting to {os.getenv('PGDATABASE')}")
+    try:
+        connection = psycopg2.connect("postgresql://")
+        db_client = connection.cursor()
+        info("Successfully connected to the database")       
+    except Exception as error:
+        info(str(error))
+        raise Exception("Failed to get a DB connection")
 
     # make the actual call to the method/function
     info("Dispatching ...")
