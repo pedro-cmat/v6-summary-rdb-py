@@ -11,7 +11,8 @@ from v6_summary_rdb.constants import *
 AGGREGATORS = {
     MAX_FUNCTION: maximum,
     MIN_FUNCTION: minimum,
-    AVG_FUNCTION: average
+    AVG_FUNCTION: average,
+    POOLED_STD_FUNCTION: pooled_std,
 }
 
 def master(client, db_client, columns, functions):

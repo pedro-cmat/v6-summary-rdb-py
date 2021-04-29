@@ -1,3 +1,4 @@
+import math
 from v6_summary_rdb.constants import *
 
 def count(results):
@@ -24,3 +25,13 @@ def average(results):
         count += result[COUNT_FUNCTION]
         total += result[SUM_FUNCTION]
     return total/count
+
+def pooled_std(results):
+    """ Calculated the pooled standard deviation. 
+    """
+    sample_size = 0
+    weighted_std = 0
+    for result in results:
+        sample_size += result[COUNT_FUNCTION]
+        weighted_std += (result[COUNT_FUNCTION] - 1) * (result[STD_SAMP_FUNCTION] ** 2)
+    return math.sqrt(weighted_std / (sample_size - len(results)))
