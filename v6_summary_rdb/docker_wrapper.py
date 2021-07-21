@@ -11,11 +11,13 @@ import time
 import psycopg2
 
 from vantage6.tools.dispatch_rpc import dispact_rpc
-from vantage6.tools.util import info
+from vantage6.tools.util import info, warn
 from vantage6.tools import deserialization, serialization
 from vantage6.tools.data_format import DataFormat
 from vantage6.tools.exceptions import DeserializationException
 from typing import BinaryIO
+
+from v6_summary_rdb.constants import ERROR
 
 # from sshtunnel import SSHTunnelForwarder
 
@@ -67,40 +69,50 @@ def docker_wrapper(module: str):
     info(f"Reading input file {input_file}")
 
     input_data = load_input(input_file)
+    output_file = os.environ["OUTPUT_FILE"]
+    output_format = input_data.get('output_format', None)
 
-    # all containers receive a token, however this is usually only
-    # used by the master method. But can be used by regular containers also
-    # for example to find out the node_id.
-    token_file = os.environ["TOKEN_FILE"]
-    info(f"Reading token file '{token_file}'")
-    with open(token_file) as fp:
-        token = fp.read().strip()
-
-    # Get the database client
-    info(f"Connecting to {os.getenv('PGDATABASE')}")
-    try:
-        connection = psycopg2.connect("postgresql://")
-        db_client = connection.cursor()
-        info("Successfully connected to the database")       
-    except Exception as error:
-        info(str(error))
-        raise Exception("Failed to get a DB connection")
+    db_client = None
+    token = None
+    if input_data.get("master"):
+        # Usually only used by the master method. But can be used
+        # by regular containers also for example to find out the node_id.
+        token_file = os.environ["TOKEN_FILE"]
+        info(f"Reading token file '{token_file}'")
+        with open(token_file) as fp:
+            token = fp.read().strip()
+    else:
+        # Get the database client
+        # In this case, the master doesn't need to access the database
+        info(f"Connecting to {os.getenv('PGDATABASE')}")
+        try:
+            connection = psycopg2.connect("postgresql://")
+            db_client = connection.cursor()
+            info("Successfully connected to the database")       
+        except Exception as error:
+            info(str(error))
+            write_output(
+                output_format,
+                {
+                    ERROR: f"DB connection error: {str(error)}",
+                },
+                output_file
+            )
+            return None
 
     # make the actual call to the method/function
     info("Dispatching ...")
     output = dispact_rpc(db_client, input_data, module, token)
 
     # Disconnecting from the database
-    info("Disconnecting from the database")
-    db_client.close()
-    connection.close()
+    if db_client:
+        info("Disconnecting from the database")
+        db_client.close()
+        connection.close()
 
     # write output from the method to mounted output file. Which will be
     # transfered back to the server by the node-instance.
-    output_file = os.environ["OUTPUT_FILE"]
     info(f"Writing output to {output_file}")
-
-    output_format = input_data.get('output_format', None)
     write_output(output_format, output, output_file)
 
 def write_output(output_format, output, output_file):
