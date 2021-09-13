@@ -7,12 +7,17 @@ from vantage6.tools.util import warn, info
 
 from v6_summary_rdb.aggregators import *
 from v6_summary_rdb.constants import *
+from v6_summary_rdb.utils import run_sql
+
+DEFAULT_FUNCTIONS = [
+    MAX_FUNCTION, MIN_FUNCTION, AVG_FUNCTION, POOLED_STD_FUNCTION]
 
 AGGREGATORS = {
     MAX_FUNCTION: maximum,
     MIN_FUNCTION: minimum,
     AVG_FUNCTION: average,
     POOLED_STD_FUNCTION: pooled_std,
+    HISTOGRAM: histogram_aggregator,
 }
 
 def master(client, db_client, columns, functions):
@@ -46,15 +51,19 @@ def master(client, db_client, columns, functions):
                 if functions:
                     column[FUNCTIONS] = functions
                 else:
-                    column[FUNCTIONS] = list(AGGREGATORS.keys())
+                    column[FUNCTIONS] = DEFAULT_FUNCTIONS
             # Check if it supports all functions
             unsupported_functions = [function for function in column[FUNCTIONS] if function not in AGGREGATORS.keys()]
             if len(unsupported_functions) > 0:
                 warn(f"Unsupported functions: {', '.join(unsupported_functions)}")
                 return None
-
-            column[REQUIRED_FUNCTIONS] = set([
-                r_function for function in column[FUNCTIONS] for r_function in FUNCTION_MAPPING[function]])
+            column[REQUIRED_FUNCTIONS] = set()
+            column[REQUIRED_METHODS] = []
+            for function in column[FUNCTIONS]:
+                if FUNCTIONS in FUNCTION_MAPPING[function]:
+                    column[REQUIRED_FUNCTIONS].update(FUNCTION_MAPPING[function][FUNCTIONS]) 
+                if METHOD in FUNCTION_MAPPING[function]:
+                    column[REQUIRED_METHODS].append([function, FUNCTION_MAPPING[function][METHOD]])
     else:
         warn("Invalid format for the input argument")
         return None
@@ -128,29 +137,39 @@ def RPC_summary(db_client, columns):
     Dict
         A Dict containing a summary for the columns requested.
     """
+    info("Summary node method.")
     summary = {}
     for column in columns:
-        # construct the sql statement
-        variable = f'"{column[VARIABLE]}"'
-        sql_functions = ''
-        for function in column[REQUIRED_FUNCTIONS]:
-            if function.upper() not in sql_functions:
-                sql_functions += f"{' ,' if sql_functions else ''}{function.upper()}({variable})"
-        sql_statement = f"SELECT {sql_functions} FROM {column[TABLE].upper()} WHERE {variable} IS NOT NULL"
+        if REQUIRED_FUNCTIONS in column:
+            # construct the sql statement
+            variable = f'"{column[VARIABLE]}"'
+            sql_functions = ''
+            for function in column[REQUIRED_FUNCTIONS]:
+                if function.upper() not in sql_functions:
+                    sql_functions += f"{' ,' if sql_functions else ''}{function.upper()}({variable})"
+            sql_statement = f"SELECT {sql_functions} FROM {column[TABLE].upper()} WHERE {variable} IS NOT NULL"
+            # execute the sql query and retrieve the results
+            try:
+                result = run_sql(db_client, sql_statement)
+            except Exception as error:
+                warn("Error while executing the sql query.")
+                return {
+                    ERROR: str(error)
+                }
+            # parse the results
+            summary[column[VARIABLE]] = {}
+            for i, function in enumerate(column[REQUIRED_FUNCTIONS]):
+                summary[column[VARIABLE]][function] = result[i]
 
-        # execute the sql query and retrieve the results
-        try:
-            db_client.execute(sql_statement)
-            result = db_client.fetchone()
-        except Exception as error:
-            warn("Error while executing the sql query.")
-            return {
-                ERROR: str(error)
-            }
-
-        # parse the results
-        summary[column[VARIABLE]] = {}
-        for i, function in enumerate(column[REQUIRED_FUNCTIONS]):
-            summary[column[VARIABLE]][function] = result[i]
-
+        if REQUIRED_METHODS in column:
+            for method in column[REQUIRED_METHODS]:
+                try:
+                    sql_statement = method[1](
+                        column[VARIABLE], column[TABLE].upper(), column)
+                    summary[column[VARIABLE]][method[0]] = run_sql(db_client, sql_statement, fetch_all=True)
+                except Exception as error:
+                    warn("Error while executing the sql query.")
+                    return {
+                        ERROR: str(error)
+                    }
     return summary
