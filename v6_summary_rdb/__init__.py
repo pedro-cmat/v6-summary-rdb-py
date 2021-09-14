@@ -18,6 +18,7 @@ AGGREGATORS = {
     AVG_FUNCTION: average,
     POOLED_STD_FUNCTION: pooled_std,
     HISTOGRAM: histogram_aggregator,
+    BOXPLOT: boxplot
 }
 
 def master(client, db_client, columns, functions):
@@ -63,7 +64,7 @@ def master(client, db_client, columns, functions):
                 if FUNCTIONS in FUNCTION_MAPPING[function]:
                     column[REQUIRED_FUNCTIONS].update(FUNCTION_MAPPING[function][FUNCTIONS]) 
                 if METHOD in FUNCTION_MAPPING[function]:
-                    column[REQUIRED_METHODS].append([function, FUNCTION_MAPPING[function][METHOD]])
+                    column[REQUIRED_METHODS].append(FUNCTION_MAPPING[function][METHOD])
     else:
         warn("Invalid format for the input argument")
         return None
@@ -164,9 +165,11 @@ def RPC_summary(db_client, columns):
         if REQUIRED_METHODS in column:
             for method in column[REQUIRED_METHODS]:
                 try:
-                    sql_statement = method[1](
+                    sql_statement = method[CALL](
                         column[VARIABLE], column[TABLE].upper(), column)
-                    summary[column[VARIABLE]][method[0]] = run_sql(db_client, sql_statement, fetch_all=True)
+                    summary[column[VARIABLE]][method[NAME]] = run_sql(
+                        db_client, sql_statement, fetch_all = method[FETCH]==FETCH_ALL
+                    )
                 except Exception as error:
                     warn("Error while executing the sql query.")
                     return {

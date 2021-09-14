@@ -1,4 +1,5 @@
 import math
+
 from v6_summary_rdb.constants import *
 
 def count(results):
@@ -46,3 +47,19 @@ def histogram_aggregator(results):
                 histogram[bins[0]] = 0
             histogram[bins[0]] += int(bins[1])
     return histogram
+
+def boxplot(results):
+    """ Aggregate the quartiles by node providing the information to
+        build a boxplot.
+    """
+    aggregated_quartiles = {}
+    for result in results:
+        quartiles = result[QUARTILES]
+        aggregated_quartiles[quartiles[0]] = {
+            MIN_FUNCTION: result[MIN_FUNCTION],
+            "q1": quartiles[1],
+            "median": quartiles[2],
+            "q3": quartiles[3],
+            MAX_FUNCTION: result[MAX_FUNCTION]
+        }
+    return aggregated_quartiles

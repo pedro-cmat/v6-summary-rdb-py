@@ -1,5 +1,7 @@
 from v6_summary_rdb.sql_functions import *
 
+PGDATABASE = "PGDATABASE"
+
 COUNT_FUNCTION = "count"
 AVG_FUNCTION = "avg"
 MAX_FUNCTION = "max"
@@ -9,6 +11,8 @@ STD_SAMP_FUNCTION = "stddev_samp"
 POOLED_STD_FUNCTION = "pooled_std"
 
 HISTOGRAM = "histogram"
+BOXPLOT = "boxplot"
+QUARTILES = "quartiles"
 
 VARIABLE = "variable"
 TABLE = "table"
@@ -19,6 +23,10 @@ METHOD = "METHOD"
 
 ERROR = "error"
 
+NAME = "NAME"
+CALL = "CALL"
+FETCH = "FETCH"
+FETCH_ONE = "FETCH_ONE"
 FETCH_ALL = "FETCH_ALL"
 
 FUNCTION_MAPPING = {
@@ -41,6 +49,18 @@ FUNCTION_MAPPING = {
         FUNCTIONS: [STD_SAMP_FUNCTION]
     },
     HISTOGRAM: {
-        METHOD: histogram,
+        METHOD: {
+            NAME: HISTOGRAM,
+            CALL: histogram,
+            FETCH: FETCH_ALL
+        },
+    },
+    BOXPLOT: {
+        FUNCTIONS: [MAX_FUNCTION, MIN_FUNCTION],
+        METHOD: {
+            NAME: QUARTILES,
+            CALL: quartiles,
+            FETCH: FETCH_ONE
+        }
     }
 }

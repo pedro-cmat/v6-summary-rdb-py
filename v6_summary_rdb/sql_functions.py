@@ -14,3 +14,14 @@ def histogram(variable, table, arguments):
 
     return f"""SELECT floor("{variable}"/{width})*{width} as bins, COUNT(*) 
         FROM {table} GROUP BY 1 ORDER BY 1"""
+
+def quartiles(variable, table, arguments):
+    """ Create the SQL statement to obtain the 25th, 50th, and 75th 
+        quartiles for a variable.
+    """
+    return f"""SELECT current_database() as db,
+        percentile_cont(0.25) within group (order by "{variable}" asc) as q1,
+        percentile_cont(0.50) within group (order by "{variable}" asc) as q2,
+        percentile_cont(0.75) within group (order by "{variable}" asc) as q3
+        FROM {table}
+    """
