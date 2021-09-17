@@ -3,12 +3,17 @@ import os
 
 from v6_summary_rdb.constants import *
 
+def compare_with_minimum(value):
+    """ Compare the value with the minimum value allowed.
+    """
+    count_minimum = os.getenv(COUNT_MINIMUM) or COUNT_MINIMUM_DEFAULT
+    return value if value > count_minimum else f"< {count_minimum}"
+
 def count(results):
     """ Calculates the global count.
     """
-    count_minimum = os.getenv(COUNT_MINIMUM) or COUNT_MINIMUM_DEFAULT
     count = sum([result[COUNT_FUNCTION] for result in results])
-    return count if count > count_minimum else f"< {count_minimum}"
+    return compare_with_minimum(count)
 
 def maximum(results):
     """ Calculates the global maximum.
@@ -63,6 +68,8 @@ def boxplot(results):
             "q1": quartiles[1],
             "median": quartiles[2],
             "q3": quartiles[3],
+            "upper_outliers": compare_with_minimum(quartiles[4]),
+            "lower_outliers": compare_with_minimum(quartiles[5]),
             MAX_FUNCTION: result[MAX_FUNCTION]
         }
     return aggregated_quartiles
