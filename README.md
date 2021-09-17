@@ -1,18 +1,14 @@
 # Federated RDB Summary
 
-Algorithm based on the Vantage 6 Federated Summary for relational databases. It reports the `Min`, `Mean`, `Max` from each `Node`.
-
-## Possible Privacy Issues
-
-🚨 Categorial column with only one category <br />
-🚨 `Min` an `Max` for each column is reported <br />
-🚨 Column names can be guessed, by trail and error
-
-## Privacy Protection
-
-✔️ If column names do not match nothing else is reported <br />
-✔️ If dataset has less that 10 rows, no statistical analysis is performed <br />
-✔️ Only statistical results `Min`, `Mean`, `Max` are reported.
+Algorithm based on the Vantage 6 Federated Summary for relational databases.
+It reports the following information from each node:
+- `Min`
+- `Max`
+- `Mean`
+- `Pooled Standard Deviation`
+- `Count`
+- `Histogram`
+- `Boxplot` (reported individually for each node)
 
 ## Node Setup
 
@@ -66,7 +62,7 @@ input_ = {
 # Send the task to the central server
 task = client.post_task(
     name="summary",
-    image="pmateus/v6-summary-rdb:1.0.0",
+    image="pmateus/v6-summary-rdb:1.1.0",
     collaboration_id=1,
     input_= input_,
     organization_ids=[2]
