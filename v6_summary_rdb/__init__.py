@@ -20,7 +20,9 @@ AGGREGATORS = {
     POOLED_STD_FUNCTION: pooled_std,
     HISTOGRAM: histogram_aggregator,
     BOXPLOT: boxplot,
-    COUNT_NULL: sum_null
+    COUNT_FUNCTION: count,
+    COUNT_NULL: sum_null,
+    COUNT_DISCRETE: count_discrete,
 }
 
 def master(client, db_client, columns, functions):

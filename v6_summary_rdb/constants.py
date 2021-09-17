@@ -10,6 +10,7 @@ SUM_FUNCTION = "sum"
 STD_SAMP_FUNCTION = "stddev_samp"
 POOLED_STD_FUNCTION = "pooled_std"
 COUNT_NULL = "count_null"
+COUNT_DISCRETE = "count_discrete"
 
 HISTOGRAM = "histogram"
 BOXPLOT = "boxplot"
@@ -70,5 +71,15 @@ FUNCTION_MAPPING = {
             CALL: count_null,
             FETCH: FETCH_ONE
         }
+    },
+    COUNT_DISCRETE: {
+        METHOD: {
+            NAME: COUNT_DISCRETE,
+            CALL: count_discrete_values,
+            FETCH: FETCH_ALL
+        }
     }
 }
+
+COUNT_MINIMUM = "COUNT_MINIMUM"
+COUNT_MINIMUM_DEFAULT = 3

@@ -30,3 +30,8 @@ def count_null(variable, table, arguments):
     """ Create the SQL statment to count the null values.
     """
     return f"""SELECT count("{variable}") FROM {table} WHERE "{variable}" IS NULL;"""
+
+def count_discrete_values(variable, table, arguments):
+    """ Count the discrete values.
+    """
+    return f"""SELECT "{variable}", count(*) FROM {table} GROUP BY "{variable}";"""

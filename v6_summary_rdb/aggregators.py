@@ -1,11 +1,14 @@
 import math
+import os
 
 from v6_summary_rdb.constants import *
 
 def count(results):
     """ Calculates the global count.
     """
-    return sum([result[COUNT_FUNCTION] for result in results])
+    count_minimum = os.getenv(COUNT_MINIMUM) or COUNT_MINIMUM_DEFAULT
+    count = sum([result[COUNT_FUNCTION] for result in results])
+    return count if count > count_minimum else f"< {count_minimum}"
 
 def maximum(results):
     """ Calculates the global maximum.
@@ -42,10 +45,10 @@ def histogram_aggregator(results):
     """
     histogram = {}
     for result in results:
-        for bins in result[HISTOGRAM]:
-            if bins[0] not in histogram:
-                histogram[bins[0]] = 0
-            histogram[bins[0]] += int(bins[1])
+        for bin in result[HISTOGRAM]:
+            if bin[0] not in histogram:
+                histogram[bin[0]] = 0
+            histogram[bin[0]] += int(bin[1])
     return histogram
 
 def boxplot(results):
@@ -68,3 +71,19 @@ def sum_null(results):
     """ Calculate the total number of null values.
     """
     return sum([result[COUNT_NULL][0] for result in results])
+
+def count_discrete(results):
+    """ Count the occurences for each discrete value.
+    """
+    total_count = {}
+    for result in results:
+        for count in result[COUNT_DISCRETE]:
+            if count[0] not in total_count:
+                total_count[count[0]] = 0
+            total_count[count[0]] += int(count[1])
+    
+    count_minimum = os.getenv(COUNT_MINIMUM) or COUNT_MINIMUM_DEFAULT
+    for key in total_count.keys():
+        if total_count[key] < count_minimum:
+            total_count[key] = f"< {count_minimum}"
+    return total_count
