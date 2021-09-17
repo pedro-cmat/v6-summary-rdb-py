@@ -28,10 +28,12 @@ def quartiles(variable, table, arguments):
         percentile_cont(0.50) within group (order by "{variable}" asc) as q2,
         percentile_cont(0.75) within group (order by "{variable}" asc) as q3
         FROM {table}) SELECT *, 
+        q1 - (q3 - q1) * {iqr_threshold} AS lower_bound,
+        q3 + (q3 - q1) * {iqr_threshold} AS upper_bound,
         (SELECT count("{variable}") FROM {table} WHERE 
-            "{variable}" > q3 + (q3 - q1) * {iqr_threshold}) AS upper_outliers,
+            "{variable}" < q1 - (q3 - q1) * {iqr_threshold}) AS lower_outliers,
         (SELECT count("{variable}") FROM {table} WHERE 
-            "{variable}" < q1 - (q3 - q1) * {iqr_threshold}) AS lower_outliers
+            "{variable}" > q3 + (q3 - q1) * {iqr_threshold}) AS upper_outliers
         FROM percentiles;
     """
 

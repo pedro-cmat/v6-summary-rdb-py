@@ -68,8 +68,10 @@ def boxplot(results):
             "q1": quartiles[1],
             "median": quartiles[2],
             "q3": quartiles[3],
-            "upper_outliers": compare_with_minimum(quartiles[4]),
-            "lower_outliers": compare_with_minimum(quartiles[5]),
+            "lower_bound": quartiles[4],
+            "upper_bound": quartiles[5],
+            "lower_outliers": compare_with_minimum(quartiles[6]),
+            "upper_outliers": compare_with_minimum(quartiles[7]),
             MAX_FUNCTION: result[MAX_FUNCTION]
         }
     return aggregated_quartiles
