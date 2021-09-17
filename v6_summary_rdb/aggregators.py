@@ -63,3 +63,8 @@ def boxplot(results):
             MAX_FUNCTION: result[MAX_FUNCTION]
         }
     return aggregated_quartiles
+
+def sum_null(results):
+    """ Calculate the total number of null values.
+    """
+    return sum([result[COUNT_NULL][0] for result in results])

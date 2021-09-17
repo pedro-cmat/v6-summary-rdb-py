@@ -10,7 +10,8 @@ from v6_summary_rdb.constants import *
 from v6_summary_rdb.utils import run_sql
 
 DEFAULT_FUNCTIONS = [
-    MAX_FUNCTION, MIN_FUNCTION, AVG_FUNCTION, POOLED_STD_FUNCTION]
+    MAX_FUNCTION, MIN_FUNCTION, AVG_FUNCTION, POOLED_STD_FUNCTION
+]
 
 AGGREGATORS = {
     MAX_FUNCTION: maximum,
@@ -18,7 +19,8 @@ AGGREGATORS = {
     AVG_FUNCTION: average,
     POOLED_STD_FUNCTION: pooled_std,
     HISTOGRAM: histogram_aggregator,
-    BOXPLOT: boxplot
+    BOXPLOT: boxplot,
+    COUNT_NULL: sum_null
 }
 
 def master(client, db_client, columns, functions):

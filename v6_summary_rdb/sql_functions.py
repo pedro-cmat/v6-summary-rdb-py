@@ -13,7 +13,7 @@ def histogram(variable, table, arguments):
         raise Exception("Histogram requested but the bin width (argument: BIN_WIDTH) must be provided!")
 
     return f"""SELECT floor("{variable}"/{width})*{width} as bins, COUNT(*) 
-        FROM {table} GROUP BY 1 ORDER BY 1"""
+        FROM {table} GROUP BY 1 ORDER BY 1;"""
 
 def quartiles(variable, table, arguments):
     """ Create the SQL statement to obtain the 25th, 50th, and 75th 
@@ -23,5 +23,10 @@ def quartiles(variable, table, arguments):
         percentile_cont(0.25) within group (order by "{variable}" asc) as q1,
         percentile_cont(0.50) within group (order by "{variable}" asc) as q2,
         percentile_cont(0.75) within group (order by "{variable}" asc) as q3
-        FROM {table}
+        FROM {table};
     """
+
+def count_null(variable, table, arguments):
+    """ Create the SQL statment to count the null values.
+    """
+    return f"""SELECT count("{variable}") FROM {table} WHERE "{variable}" IS NULL;"""

@@ -9,6 +9,7 @@ MIN_FUNCTION = "min"
 SUM_FUNCTION = "sum"
 STD_SAMP_FUNCTION = "stddev_samp"
 POOLED_STD_FUNCTION = "pooled_std"
+COUNT_NULL = "count_null"
 
 HISTOGRAM = "histogram"
 BOXPLOT = "boxplot"
@@ -60,6 +61,13 @@ FUNCTION_MAPPING = {
         METHOD: {
             NAME: QUARTILES,
             CALL: quartiles,
+            FETCH: FETCH_ONE
+        }
+    },
+    COUNT_NULL: {
+        METHOD: {
+            NAME: COUNT_NULL,
+            CALL: count_null,
             FETCH: FETCH_ONE
         }
     }
