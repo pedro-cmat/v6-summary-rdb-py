@@ -58,7 +58,6 @@ def docker_wrapper(module: str):
     The other serialization formats support the following algorithm output:
     - built-in primitives (int, float, str, etc.)
     - built-in collections (list, dict, tuple, etc.)
-    - pandas DataFrames
     :param module: module that contains the vantage6 algorithms
     :return:
     """

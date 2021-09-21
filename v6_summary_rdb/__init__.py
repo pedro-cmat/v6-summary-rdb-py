@@ -1,7 +1,4 @@
-import sys
-import pandas
 import time
-import json
 
 from vantage6.tools.util import warn, info
 
@@ -11,7 +8,7 @@ from v6_summary_rdb.mapping import AGGREGATORS, FUNCTION_MAPPING
 from v6_summary_rdb.sql_functions import cohort_count
 from v6_summary_rdb.utils import run_sql, parse_error
 
-def master(client, db_client, columns, functions, cohort):
+def master(client, db_client, columns = [], functions = None, cohort = None):
     """
     Master algorithm to compute a summary of the federated datasets.
 

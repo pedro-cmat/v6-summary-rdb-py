@@ -1,3 +1,5 @@
+import os
+
 from v6_summary_rdb.constants import *
 
 def histogram(variable, table, arguments):
@@ -7,7 +9,7 @@ def histogram(variable, table, arguments):
     width = None
     if BIN_WIDTH in arguments:
         width = arguments[BIN_WIDTH]
-        if not isinstance(width, int) or width <= 1:
+        if not isinstance(width, int) or width < (os.getenv(BIN_WIDTH_MINIMUM) or BIN_WIDTH_MINIMUM_DEFAULT):
             raise Exception("Invalid bin width provided, value must be a integer superior to 1.")
     else:
         raise Exception("Histogram requested but the bin width (argument: BIN_WIDTH) must be provided!")
@@ -19,7 +21,7 @@ def quartiles(variable, table, arguments):
     """ Create the SQL statement to obtain the 25th, 50th, and 75th 
         quartiles for a variable.
     """
-    iqr_threshold = arguments.get(IQR_THRESHOLD) or 1.5
+    iqr_threshold = arguments.get(IQR_THRESHOLD) or IQR_THRESHOLD_DEFAULT
     return f"""with percentiles AS (SELECT current_database() as db,
         percentile_cont(0.25) within group (order by "{variable}" asc) as q1,
         percentile_cont(0.50) within group (order by "{variable}" asc) as q2,
