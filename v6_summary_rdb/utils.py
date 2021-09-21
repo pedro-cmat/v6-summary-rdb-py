@@ -18,3 +18,8 @@ def parse_error(error_message):
     return {
         ERROR: error_message 
     }
+
+def check_keys_in_dict(keys, map):
+    """ Check if all keys are present in a dictionary.
+    """
+    return all([key in map for key in keys])

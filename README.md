@@ -121,6 +121,42 @@ input_ = {
 }
 ```
 
+### Cohort
+
+The cohort function allows to explore possible groups of participants based on a set of
+characteristics that can be set using the SQL operators:
+
+```python
+input_ = {
+    "master": "true",
+    "method":"master", 
+    "args": [], 
+    "kwargs": {
+        "cohort": {
+            "definition": [
+                {
+                    "variable": "Age",
+                    "operator": ">=",
+                    "value": 75
+                },
+                {
+                    "variable": "deadstatus.event",
+                    "operator": "=",
+                    "value": 1
+                },
+                {
+                    "variable": "Histology",
+                    "operator": "IN",
+                    "value": "('large_cell', 'scc')"
+                }
+            ],
+            "table": "records",
+            "id_column": "ID"
+        }
+    }
+}
+```
+
 ## Test / Develop
 
 You need to have Docker installed.

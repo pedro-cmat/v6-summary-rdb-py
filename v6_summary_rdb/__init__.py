@@ -6,7 +6,7 @@ from v6_summary_rdb.aggregators import cohort_aggregator
 from v6_summary_rdb.constants import *
 from v6_summary_rdb.mapping import AGGREGATORS, FUNCTION_MAPPING
 from v6_summary_rdb.sql_functions import cohort_count
-from v6_summary_rdb.utils import run_sql, parse_error
+from v6_summary_rdb.utils import run_sql, parse_error, check_keys_in_dict
 
 def master(client, db_client, columns = [], functions = None, cohort = None):
     """
@@ -56,8 +56,9 @@ def master(client, db_client, columns = [], functions = None, cohort = None):
         return parse_error("Invalid format for the summary input argument")
 
     if cohort:
-        if not all([info in cohort for info in [COHORT_DEFINITION, TABLE, ID_COLUMN]]) or \
-            not all([VARIABLE in definition and OPERATOR in definition for definition in cohort[COHORT_DEFINITION]]):
+        if not check_keys_in_dict([COHORT_DEFINITION, TABLE, ID_COLUMN], cohort) or \
+            len(cohort[COHORT_DEFINITION]) < 1 or \
+            not all([check_keys_in_dict([VARIABLE, OPERATOR, VALUE], definition) for definition in cohort[COHORT_DEFINITION]]):
             return parse_error("Invalid cohort definition for the cohort input argument")
 
 
@@ -136,6 +137,7 @@ def RPC_summary(db_client, columns, cohort):
         A Dict containing a summary for the columns requested.
     """
     info("Summary node method.")
+    # Execute the necessary SQL queries and aggreagte the results
     summary = {}
     for column in columns:
         if REQUIRED_FUNCTIONS in column:
