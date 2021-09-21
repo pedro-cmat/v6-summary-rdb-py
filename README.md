@@ -10,6 +10,8 @@ It reports the following information from each node:
 - `Histogram`
 - `Boxplot` (reported individually for each node)
 
+Additionally, it's also possible to evaluate the number of participants for a cohort.
+
 ## Node Setup
 
 Make sure to set the database connection parameters as environment variables using the default variables for a postgres database (https://www.postgresql.org/docs/9.3/libpq-envars.html):
@@ -62,7 +64,7 @@ input_ = {
 # Send the task to the central server
 task = client.post_task(
     name="summary",
-    image="pmateus/v6-summary-rdb:1.1.0",
+    image="pmateus/v6-summary-rdb:1.2.0",
     collaboration_id=1,
     input_= input_,
     organization_ids=[2]
@@ -70,6 +72,53 @@ task = client.post_task(
 
 # Retrieve the results
 res = client.get_results(task_id=task.get("id")
+```
+
+### Histogram
+
+The histogram function requires the bin width to be provided using the following variable `BIN_WIDTH`.
+
+```python
+input_ = {
+    "master": "true",
+    "method":"master", 
+    "args": [], 
+    "kwargs": {
+        "functions": [],
+        "columns": [
+            {
+                "variable": "age",
+                "table": "records",
+                "functions": ["histogram"],
+                "BIN_WIDTH": 4
+            }
+        ]
+    }
+}
+```
+
+### Boxplot
+
+The Boxplot function allows to specify the IQR used to determine the boundaries.
+By default this value is 1.5 but it can be changed using the following variable `IQR_THRESHOLD`.
+
+```python
+input_ = {
+    "master": "true",
+    "method":"master", 
+    "args": [], 
+    "kwargs": {
+        "functions": [],
+        "columns": [
+            {
+                "variable": "age",
+                "table": "records",
+                "functions": ["boxplot"],
+                "IQR_THRESHOLD": 2
+            }
+        ]
+    }
+}
 ```
 
 ## Test / Develop

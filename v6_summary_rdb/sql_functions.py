@@ -19,9 +19,7 @@ def quartiles(variable, table, arguments):
     """ Create the SQL statement to obtain the 25th, 50th, and 75th 
         quartiles for a variable.
     """
-    iqr_threshold = 1.5
-    if IQR_THRESHOLD in arguments:
-        iqr_threshold = arguments[IQR_THRESHOLD]
+    iqr_threshold = arguments.get(IQR_THRESHOLD) or 1.5
     return f"""with percentiles AS (SELECT current_database() as db,
         percentile_cont(0.25) within group (order by "{variable}" asc) as q1,
         percentile_cont(0.50) within group (order by "{variable}" asc) as q2,

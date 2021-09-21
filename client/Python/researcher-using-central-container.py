@@ -51,7 +51,7 @@ input_ = {
 # 3. post the task to the server
 task = client.post_task(
     name="summary",
-    image="pcmateus/v6-summary-rdb:1.0.0",
+    image="pcmateus/v6-summary-rdb:1.2.0",
     collaboration_id=3,
     organization_ids=[3],  # specify where the central container should run!
     input_=input_
