@@ -1,5 +1,4 @@
-BIN_WIDTH = "BIN_WIDTH"
-IQR_THRESHOLD = "IQR_THRESHOLD"
+from v6_summary_rdb.constants import *
 
 def histogram(variable, table, arguments):
     """ Create the SQL statement to obtain the necessary information
@@ -46,3 +45,12 @@ def count_discrete_values(variable, table, arguments):
     """ Count the discrete values.
     """
     return f"""SELECT "{variable}", count(*) FROM {table} GROUP BY "{variable}";"""
+
+def cohort_count(id_column, definition, table):
+    """ Count the number of persons in a possible cohort.
+    """
+    sql_condition = ''
+    for component in definition:
+        sql_condition += f' AND' if sql_condition else f'WHERE'
+        sql_condition += f' "{component[VARIABLE]}" {component[OPERATOR]} {component[VALUE]}'
+    return f"""SELECT current_database() as db, COUNT("{id_column or "*"}") FROM {table} {sql_condition}"""

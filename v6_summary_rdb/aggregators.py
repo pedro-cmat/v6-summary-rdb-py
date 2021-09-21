@@ -96,3 +96,15 @@ def count_discrete(results):
         if total_count[key] < count_minimum:
             total_count[key] = f"< {count_minimum}"
     return total_count
+
+def cohort_aggregator(results):
+    """ Aggregate the number of individuals included in the cohort
+        definition.
+    """
+    total_count = 0
+    count = {}
+    for result in results:
+        count[result[0]] = compare_with_minimum(result[1])
+        total_count += result[1]
+    count["total_count"] = compare_with_minimum(total_count)
+    return count

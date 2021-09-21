@@ -5,27 +5,13 @@ import json
 
 from vantage6.tools.util import warn, info
 
-from v6_summary_rdb.aggregators import *
+from v6_summary_rdb.aggregators import cohort_aggregator
 from v6_summary_rdb.constants import *
-from v6_summary_rdb.utils import run_sql
+from v6_summary_rdb.mapping import AGGREGATORS, FUNCTION_MAPPING
+from v6_summary_rdb.sql_functions import cohort_count
+from v6_summary_rdb.utils import run_sql, parse_error
 
-DEFAULT_FUNCTIONS = [
-    MAX_FUNCTION, MIN_FUNCTION, AVG_FUNCTION, POOLED_STD_FUNCTION
-]
-
-AGGREGATORS = {
-    MAX_FUNCTION: maximum,
-    MIN_FUNCTION: minimum,
-    AVG_FUNCTION: average,
-    POOLED_STD_FUNCTION: pooled_std,
-    HISTOGRAM: histogram_aggregator,
-    BOXPLOT: boxplot,
-    COUNT_FUNCTION: count,
-    COUNT_NULL: sum_null,
-    COUNT_DISCRETE: count_discrete,
-}
-
-def master(client, db_client, columns, functions):
+def master(client, db_client, columns, functions, cohort):
     """
     Master algorithm to compute a summary of the federated datasets.
 
@@ -37,6 +23,8 @@ def master(client, db_client, columns, functions):
         The database client.
     columns : List
         List containing the columns and information needed.
+    cohort: Dict
+        Information to identify the number of persons in a specific cohort.
 
     Returns
     -------
@@ -49,8 +37,7 @@ def master(client, db_client, columns, functions):
     if type(columns) == list:
         for column in columns:
             if not all([parameter in column for parameter in [VARIABLE, TABLE]]):
-                warn("Missing information in the input argument")
-                return None                
+                return parse_error("Missing information in the input argument")                
             # check which functions to run
             if FUNCTIONS not in column:
                 if functions:
@@ -60,8 +47,7 @@ def master(client, db_client, columns, functions):
             # Check if it supports all functions
             unsupported_functions = [function for function in column[FUNCTIONS] if function not in AGGREGATORS.keys()]
             if len(unsupported_functions) > 0:
-                warn(f"Unsupported functions: {', '.join(unsupported_functions)}")
-                return None
+                return parse_error(f"Unsupported functions: {', '.join(unsupported_functions)}")
             column[REQUIRED_FUNCTIONS] = set()
             column[REQUIRED_METHODS] = []
             for function in column[FUNCTIONS]:
@@ -70,8 +56,12 @@ def master(client, db_client, columns, functions):
                 if METHOD in FUNCTION_MAPPING[function]:
                     column[REQUIRED_METHODS].append(FUNCTION_MAPPING[function][METHOD])
     else:
-        warn("Invalid format for the input argument")
-        return None
+        return parse_error("Invalid format for the summary input argument")
+
+    if cohort:
+        if not all([info in cohort for info in [COHORT_DEFINITION, TABLE, ID_COLUMN]]) or \
+            not all([VARIABLE in definition and OPERATOR in definition for definition in cohort[COHORT_DEFINITION]]):
+            return parse_error("Invalid cohort definition for the cohort input argument")
 
 
     # define the input for the summary algorithm
@@ -80,7 +70,8 @@ def master(client, db_client, columns, functions):
         "method": "summary",
         "args": [],
         "kwargs": {
-            "columns": columns
+            "columns": columns,
+            "cohort": cohort
         }
     }
 
@@ -124,9 +115,12 @@ def master(client, db_client, columns, functions):
         for function in column[FUNCTIONS]:
             summary[column[VARIABLE]][function] = AGGREGATORS[function](nodes_summary)
 
+    if cohort:
+        summary[COHORT] = cohort_aggregator([result[COHORT] for result in results])
+
     return summary
 
-def RPC_summary(db_client, columns):
+def RPC_summary(db_client, columns, cohort):
     """
     Computes a summary of the requested columns
 
@@ -136,6 +130,8 @@ def RPC_summary(db_client, columns):
         The database client.
     columns : List
         List containing the columns and information needed.
+    cohort: Dict
+        Information to identify the number of persons in a specific cohort.
 
     Returns
     -------
@@ -157,10 +153,8 @@ def RPC_summary(db_client, columns):
             try:
                 result = run_sql(db_client, sql_statement)
             except Exception as error:
-                warn("Error while executing the sql query.")
-                return {
-                    ERROR: str(error)
-                }
+                warn("Error while executing the sql query for the summary (functions).")
+                return parse_error(str(error))
             # parse the results
             summary[column[VARIABLE]] = {}
             for i, function in enumerate(column[REQUIRED_FUNCTIONS]):
@@ -175,8 +169,20 @@ def RPC_summary(db_client, columns):
                         db_client, sql_statement, fetch_all = method[FETCH]==FETCH_ALL
                     )
                 except Exception as error:
-                    warn("Error while executing the sql query.")
-                    return {
-                        ERROR: str(error)
-                    }
+                    warn(f"Error while executing the sql query for the summary method {method}.")
+                    return parse_error(str(error))
+
+    # Process the cohort if included in the request
+    if cohort:
+        try:
+            sql_statement = cohort_count(
+                ID_COLUMN in cohort and cohort[ID_COLUMN],
+                cohort[COHORT_DEFINITION],
+                cohort[TABLE],
+            )
+            summary[COHORT] = run_sql(db_client, sql_statement)
+        except Exception as error:
+            warn("Error while executing the sql query for the cohort analysis.")
+            return parse_error(str(error))
+
     return summary
