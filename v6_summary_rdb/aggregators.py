@@ -2,12 +2,7 @@ import math
 import os
 
 from v6_summary_rdb.constants import *
-
-def compare_with_minimum(value):
-    """ Compare the value with the minimum value allowed.
-    """
-    count_minimum = os.getenv(COUNT_MINIMUM) or COUNT_MINIMUM_DEFAULT
-    return value if value > count_minimum else f"< {count_minimum}"
+from v6_summary_rdb.utils import compare_with_minimum
 
 def count(results):
     """ Calculates the global count.
@@ -54,7 +49,7 @@ def histogram_aggregator(results):
             if bin[0] not in histogram:
                 histogram[bin[0]] = 0
             histogram[bin[0]] += int(bin[1])
-    return histogram
+    return {key: compare_with_minimum(value) for key, value in histogram.items()}
 
 def boxplot(results):
     """ Aggregate the quartiles by node providing the information to
@@ -103,5 +98,5 @@ def cohort_aggregator(results):
     """
     count = {}
     for result in results:
-        count[result[0]] = compare_with_minimum(result[1])
+        count[result[0]] = result[1]
     return count

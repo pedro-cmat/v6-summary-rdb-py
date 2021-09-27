@@ -5,8 +5,8 @@ from vantage6.tools.util import warn, info
 from v6_summary_rdb.aggregators import cohort_aggregator
 from v6_summary_rdb.constants import *
 from v6_summary_rdb.mapping import AGGREGATORS, FUNCTION_MAPPING
-from v6_summary_rdb.sql_functions import cohort_count
-from v6_summary_rdb.utils import run_sql, parse_error, check_keys_in_dict
+from v6_summary_rdb.sql_wrapper import cohort_finder, summary_results
+from v6_summary_rdb.utils import *
 
 def master(client, db_client, columns = [], functions = None, cohort = None):
     """
@@ -108,10 +108,15 @@ def master(client, db_client, columns = [], functions = None, cohort = None):
     summary = {}
 
     for column in columns:
-        summary[column[VARIABLE]] = {}
-        nodes_summary = [result[column[VARIABLE]] for result in results]
-        for function in column[FUNCTIONS]:
-            summary[column[VARIABLE]][function] = AGGREGATORS[function](nodes_summary)
+        variable_name = column[VARIABLE]
+        summary[variable_name] = {}
+        warnings = [result[variable_name][WARNING] for result in results if WARNING in result[variable_name]]
+        if len(warnings) > 0:
+            summary[variable_name] = warnings
+        else:
+            nodes_summary = [result[variable_name] for result in results]
+            for function in column[FUNCTIONS]:
+                summary[variable_name][function] = AGGREGATORS[function](nodes_summary)
 
     if cohort:
         summary[COHORT] = cohort_aggregator([result[COHORT] for result in results])
@@ -137,51 +142,19 @@ def RPC_summary(db_client, columns, cohort):
         A Dict containing a summary for the columns requested.
     """
     info("Summary node method.")
-    # Execute the necessary SQL queries and aggreagte the results
+    # Execute the necessary SQL queries and aggregate the results
     summary = {}
-    for column in columns:
-        if REQUIRED_FUNCTIONS in column:
-            # construct the sql statement
-            variable = f'"{column[VARIABLE]}"'
-            sql_functions = ''
-            for function in column[REQUIRED_FUNCTIONS]:
-                if function.upper() not in sql_functions:
-                    sql_functions += f"{' ,' if sql_functions else ''}{function.upper()}({variable})"
-            sql_statement = f"SELECT {sql_functions} FROM {column[TABLE].upper()} WHERE {variable} IS NOT NULL"
-            # execute the sql query and retrieve the results
-            try:
-                result = run_sql(db_client, sql_statement)
-            except Exception as error:
-                warn("Error while executing the sql query for the summary (functions).")
-                return parse_error(str(error))
-            # parse the results
-            summary[column[VARIABLE]] = {}
-            for i, function in enumerate(column[REQUIRED_FUNCTIONS]):
-                summary[column[VARIABLE]][function] = result[i]
-
-        if REQUIRED_METHODS in column:
-            for method in column[REQUIRED_METHODS]:
-                try:
-                    sql_statement = method[CALL](
-                        column[VARIABLE], column[TABLE].upper(), column)
-                    summary[column[VARIABLE]][method[NAME]] = run_sql(
-                        db_client, sql_statement, fetch_all = method[FETCH]==FETCH_ALL
-                    )
-                except Exception as error:
-                    warn(f"Error while executing the sql query for the summary method {method}.")
-                    return parse_error(str(error))
-
     # Process the cohort if included in the request
+    sql_condition = None
     if cohort:
         try:
-            sql_statement = cohort_count(
-                ID_COLUMN in cohort and cohort[ID_COLUMN],
-                cohort[COHORT_DEFINITION],
-                cohort[TABLE],
-            )
-            summary[COHORT] = run_sql(db_client, sql_statement)
+            (summary[COHORT], sql_condition) = cohort_finder(cohort, db_client)
         except Exception as error:
-            warn("Error while executing the sql query for the cohort analysis.")
-            return parse_error(str(error))
+            return parse_error(f"Error while executing the sql query for the cohort analysis {str(error)}")
+
+    try:
+        summary.update(summary_results(columns, sql_condition, db_client))
+    except Exception as error:
+        return parse_error(f"Error while executing the sql query for the summary: {str(error)}")
 
     return summary

@@ -1,8 +1,9 @@
 import os
 
 from v6_summary_rdb.constants import *
+from v6_summary_rdb.utils import parse_sql_condition
 
-def histogram(variable, table, arguments):
+def histogram(variable, table, sql_condition, arguments):
     """ Create the SQL statement to obtain the necessary information
         for an histogram.
     """
@@ -15,9 +16,9 @@ def histogram(variable, table, arguments):
         raise Exception("Histogram requested but the bin width (argument: BIN_WIDTH) must be provided!")
 
     return f"""SELECT floor("{variable}"/{width})*{width} as bins, COUNT(*) 
-        FROM {table} GROUP BY 1 ORDER BY 1;"""
+        FROM {table} {parse_sql_condition(sql_condition, where_condition=True)} GROUP BY 1 ORDER BY 1;"""
 
-def quartiles(variable, table, arguments):
+def quartiles(variable, table, sql_condition, arguments):
     """ Create the SQL statement to obtain the 25th, 50th, and 75th 
         quartiles for a variable.
     """
@@ -26,31 +27,38 @@ def quartiles(variable, table, arguments):
         percentile_cont(0.25) within group (order by "{variable}" asc) as q1,
         percentile_cont(0.50) within group (order by "{variable}" asc) as q2,
         percentile_cont(0.75) within group (order by "{variable}" asc) as q3
-        FROM {table}) SELECT *, 
-        q1 - (q3 - q1) * {iqr_threshold} AS lower_bound,
+        FROM {table} {parse_sql_condition(sql_condition, where_condition=True)})
+        SELECT *, q1 - (q3 - q1) * {iqr_threshold} AS lower_bound,
         q3 + (q3 - q1) * {iqr_threshold} AS upper_bound,
         (SELECT count("{variable}") FROM {table} WHERE 
-            "{variable}" < q1 - (q3 - q1) * {iqr_threshold}) AS lower_outliers,
+            "{variable}" < q1 - (q3 - q1) * {iqr_threshold} 
+            {parse_sql_condition(sql_condition)}) AS lower_outliers,
         (SELECT count("{variable}") FROM {table} WHERE 
-            "{variable}" > q3 + (q3 - q1) * {iqr_threshold}) AS upper_outliers
+            "{variable}" > q3 + (q3 - q1) * {iqr_threshold} 
+            {parse_sql_condition(sql_condition)}) AS upper_outliers
         FROM percentiles;
     """
 
-def count_null(variable, table, arguments):
+def count_null(variable, table, sql_condition, arguments):
     """ Create the SQL statment to count the null values.
     """
-    return f"""SELECT count("{variable}") FROM {table} WHERE "{variable}" IS NULL;"""
+    return f"""SELECT count("{variable}") FROM {table} WHERE "{variable}" IS NULL
+        {parse_sql_condition(sql_condition)};"""
 
-def count_discrete_values(variable, table, arguments):
+def count_discrete_values(variable, table, sql_condition, arguments):
     """ Count the discrete values.
     """
-    return f"""SELECT "{variable}", count(*) FROM {table} GROUP BY "{variable}";"""
+    return f"""SELECT "{variable}", count(*) FROM {table} 
+        {parse_sql_condition(sql_condition, where_condition=True)} GROUP BY "{variable}";"""
 
 def cohort_count(id_column, definition, table):
     """ Count the number of persons in a possible cohort.
     """
     sql_condition = ''
     for component in definition:
-        sql_condition += f' AND' if sql_condition else f'WHERE'
+        sql_condition += f' AND' if sql_condition else ''
         sql_condition += f' "{component[VARIABLE]}" {component[OPERATOR]} {component[VALUE]}'
-    return f"""SELECT current_database() as db, COUNT("{id_column or "*"}") FROM {table} {sql_condition}"""
+    return (f"""SELECT current_database() as db, COUNT("{id_column or "*"}") 
+        FROM {table} WHERE {sql_condition}""",
+        sql_condition,
+    )
