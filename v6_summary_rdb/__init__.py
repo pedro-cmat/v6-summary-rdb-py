@@ -87,13 +87,12 @@ def master(client, db_client, columns = [], functions = None, cohort = None):
     )
 
     # wait for all results
-    # TODO subscribe to websocket, to avoid polling
     task_id = task.get("id")
     task = client.request(f"task/{task_id}")
     while not task.get("complete"):
         task = client.request(f"task/{task_id}")
         info("Waiting for results")
-        time.sleep(1)
+        time.sleep(5)
 
     info("Obtaining results")
     results = client.get_results(task_id=task.get("id"))

@@ -28,7 +28,7 @@ def check_keys_in_dict(keys, map):
 def compare_with_minimum(value):
     """ Compare the value with the minimum value allowed.
     """
-    count_minimum = os.getenv(COUNT_MINIMUM) or COUNT_MINIMUM_DEFAULT
+    count_minimum = int(os.getenv(COUNT_MINIMUM) or COUNT_MINIMUM_DEFAULT)
     return value if value > count_minimum else f"< {count_minimum}"
 
 def parse_sql_condition(sql_condition, where_condition=False):

@@ -31,7 +31,7 @@ def summary_results(columns, sql_condition, db_client):
             WHERE {variable} IS NOT NULL {parse_sql_condition(sql_condition)};"""
         result = run_sql(db_client, sql_statement)
         summary[column[VARIABLE]] = {}
-        if int(result[1]) >= (os.getenv(COUNT_MINIMUM) or COUNT_MINIMUM_DEFAULT):
+        if int(result[1]) >= int(os.getenv(TABLE_MINIMUM) or TABLE_MINIMUM_DEFAULT):
             if REQUIRED_FUNCTIONS in column:
                 # construct the sql statement
                 sql_functions = ""

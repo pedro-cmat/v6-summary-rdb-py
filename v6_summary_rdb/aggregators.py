@@ -86,7 +86,7 @@ def count_discrete(results):
                 total_count[count[0]] = 0
             total_count[count[0]] += int(count[1])
     
-    count_minimum = os.getenv(COUNT_MINIMUM) or COUNT_MINIMUM_DEFAULT
+    count_minimum = int(os.getenv(COUNT_MINIMUM) or COUNT_MINIMUM_DEFAULT)
     for key in total_count.keys():
         if total_count[key] < count_minimum:
             total_count[key] = f"< {count_minimum}"
