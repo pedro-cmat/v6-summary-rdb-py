@@ -105,20 +105,26 @@ def master(client, db_client, columns = [], functions = None, cohort = None):
     # process the output
     info("Process the node results")
     summary = {}
-
-    for column in columns:
-        variable_name = column[VARIABLE]
-        summary[variable_name] = {}
-        warnings = [result[variable_name][WARNING] for result in results if WARNING in result[variable_name]]
-        if len(warnings) > 0:
-            summary[variable_name] = warnings
-        else:
-            nodes_summary = [result[variable_name] for result in results]
-            for function in column[FUNCTIONS]:
-                summary[variable_name][function] = AGGREGATORS[function](nodes_summary)
-
+    cohort_error = False
     if cohort:
-        summary[COHORT] = cohort_aggregator([result[COHORT] for result in results])
+        warnings = [result[COHORT][WARNING] for result in results if WARNING in result[COHORT]]
+        if len(warnings) > 0:
+            summary[COHORT] = warnings
+            cohort_error = True
+        else:
+            summary[COHORT] = cohort_aggregator([result[COHORT] for result in results])
+
+    if not cohort or not cohort_error:
+        for column in columns:
+            variable_name = column[VARIABLE]
+            summary[variable_name] = {}
+            warnings = [result[variable_name][WARNING] for result in results if WARNING in result[variable_name]]
+            if len(warnings) > 0:
+                summary[variable_name] = warnings
+            else:
+                nodes_summary = [result[variable_name] for result in results]
+                for function in column[FUNCTIONS]:
+                    summary[variable_name][function] = AGGREGATORS[function](nodes_summary)
 
     return summary
 
@@ -151,9 +157,10 @@ def RPC_summary(db_client, columns, cohort):
         except Exception as error:
             return parse_error(f"Error while executing the sql query for the cohort analysis {str(error)}")
 
-    try:
-        summary.update(summary_results(columns, sql_condition, db_client))
-    except Exception as error:
-        return parse_error(f"Error while executing the sql query for the summary: {str(error)}")
+    if not cohort or sql_condition:
+        try:
+            summary.update(summary_results(columns, sql_condition, db_client))
+        except Exception as error:
+            return parse_error(f"Error while executing the sql query for the summary: {str(error)}")
 
     return summary
