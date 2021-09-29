@@ -12,6 +12,10 @@ It reports the following information from each node:
 
 Additionally, it's also possible to evaluate the number of participants for a cohort.
 
+The data privacy can be enhanced using environment variables that restrict the access to
+datasets that have a minimum amount of records. This is also applied to the results obtained 
+from the different functions provided. See more below.
+
 ## Node Setup
 
 Make sure to set the database connection parameters as environment variables using the default variables for a postgres database (https://www.postgresql.org/docs/9.3/libpq-envars.html):
@@ -123,7 +127,7 @@ input_ = {
 
 ### Cohort
 
-The cohort function allows to explore possible groups of participants based on a set of
+The cohort function allows to explore possible groups of participants based on a set of 
 characteristics that can be set using the SQL operators:
 
 ```python
@@ -156,6 +160,54 @@ input_ = {
     }
 }
 ```
+
+Combined with the `columns` argument, it's possible to obtain summary statistics 
+regarding the selected cohort:
+
+```python
+input_ = {
+    "master": "true",
+    "method":"master", 
+    "args": [], 
+    "kwargs": {
+        "cohort": {
+            "definition": [
+                {
+                    "variable": "deadstatus.event",
+                    "operator": "=",
+                    "value": 1
+                }
+            ],
+            "table": "records",
+            "id_column": "ID"
+        },
+        "columns": [
+            {
+                "variable": "age",
+                "table": "records",
+                "functions": ["avg"]
+            }
+        ]
+    }
+}
+```
+
+In this example, we would be calculating the age average for the group of 
+participants that has 1 as the value for the dead status.
+
+## Privacy
+
+Federated learning distinguishes itself by bringing additional security and privacy 
+by keeping the data at each center.
+Keeping that in mind, the following variables give control over the algorithm:
+- `TABLE_MINIMUM` (default value = 10): minimum number of records available in the 
+requested table to run the functions or the cohort functionality;
+- `COUNT_MINIMUM` (default value = 5): minimum value allowed to be presented in the 
+results when counting the number of records/outliers/...;
+- `BIN_WIDTH_MINIMUM` (default value = 2): the minimum width for the histogram bins;
+
+These environment variables can be used in the `algorithm_env` field when configuring 
+the vantage6 node.
 
 ## Test / Develop
 
