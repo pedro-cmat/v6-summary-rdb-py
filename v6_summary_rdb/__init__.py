@@ -8,7 +8,7 @@ from v6_summary_rdb.mapping import AGGREGATORS, FUNCTION_MAPPING
 from v6_summary_rdb.sql_wrapper import cohort_finder, summary_results
 from v6_summary_rdb.utils import *
 
-def master(client, db_client, columns = [], functions = None, cohort = None):
+def master(client, db_client, columns = [], functions = None, cohort = None, org_ids = None):
     """
     Master algorithm to compute a summary of the federated datasets.
 
@@ -76,7 +76,8 @@ def master(client, db_client, columns = [], functions = None, cohort = None):
     # obtain organizations that are within my collaboration
     info("Obtaining the organizations in the collaboration")
     organizations = client.get_organizations_in_my_collaboration()
-    ids = [organization.get("id") for organization in organizations]
+    ids = [organization.get("id") for organization in organizations if \
+        not org_ids or organization.get("id") in org_ids]
 
     # collaboration and image is stored in the key, so we do not need
     # to specify these

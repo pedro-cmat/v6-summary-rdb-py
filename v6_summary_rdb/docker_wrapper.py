@@ -126,6 +126,8 @@ def write_output(output_format, output, output_file):
     with open(output_file, 'wb') as fp:
         if output_format:
             # Indicate output format
+            # if output_format == "json":
+            #     encoder.FLOAT_REPR = lambda o: format(o, '.2f')
             fp.write(output_format.encode() + b'.')
 
             # Write actual data
