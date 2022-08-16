@@ -78,6 +78,7 @@ def master(client, db_client, columns = [], functions = None, cohort = None, org
     organizations = client.get_organizations_in_my_collaboration()
     ids = [organization.get("id") for organization in organizations if \
         not org_ids or organization.get("id") in org_ids]
+    info(f"Sending the algorithm to the following organizations: {' ,'.join(str(id) for id in ids)}")
 
     # collaboration and image is stored in the key, so we do not need
     # to specify these
@@ -105,29 +106,31 @@ def master(client, db_client, columns = [], functions = None, cohort = None, org
 
     # process the output
     info("Process the node results")
-    summary = {}
-    cohort_error = False
-    if cohort:
-        warnings = [result[COHORT][WARNING] for result in results if WARNING in result[COHORT]]
-        if len(warnings) > 0:
-            summary[COHORT] = warnings
-            cohort_error = True
-        else:
-            summary[COHORT] = cohort_aggregator([result[COHORT] for result in results])
-
-    if not cohort or not cohort_error:
-        for column in columns:
-            variable_name = column[VARIABLE]
-            summary[variable_name] = {}
-            warnings = [result[variable_name][WARNING] for result in results if WARNING in result[variable_name]]
+    try:
+        summary = {}
+        cohort_error = False
+        if cohort:
+            warnings = [result[COHORT][WARNING] for result in results if WARNING in result[COHORT]]
             if len(warnings) > 0:
-                summary[variable_name] = warnings
+                summary[COHORT] = warnings
+                cohort_error = True
             else:
-                nodes_summary = [result[variable_name] for result in results]
-                for function in column[FUNCTIONS]:
-                    summary[variable_name][function] = AGGREGATORS[function](nodes_summary)
+                summary[COHORT] = cohort_aggregator([result[COHORT] for result in results])
 
-    return summary
+        if not cohort or not cohort_error:
+            for column in columns:
+                variable_name = column[VARIABLE]
+                summary[variable_name] = {}
+                warnings = [result[variable_name][WARNING] for result in results if WARNING in result[variable_name]]
+                if len(warnings) > 0:
+                    summary[variable_name] = warnings
+                else:
+                    nodes_summary = [result[variable_name] for result in results]
+                    for function in column[FUNCTIONS]:
+                        summary[variable_name][function] = AGGREGATORS[function](nodes_summary)
+        return summary
+    except Exception as error:
+            return parse_error(f"Error while aggregating the results: {str(error)}")
 
 def RPC_summary(db_client, columns, cohort):
     """

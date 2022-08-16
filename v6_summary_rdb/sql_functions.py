@@ -42,7 +42,7 @@ def quartiles(variable, table, sql_condition, arguments):
 def count_null(variable, table, sql_condition, arguments):
     """ Create the SQL statment to count the null values.
     """
-    return f"""SELECT count("{variable}") FROM {table} WHERE "{variable}" IS NULL
+    return f"""SELECT count(*) FROM {table} WHERE "{variable}" IS NULL
         {parse_sql_condition(sql_condition)};"""
 
 def count_discrete_values(variable, table, sql_condition, arguments):
